@@ -51,9 +51,9 @@ git config --global user.email "your-email@example.com"
 
 ## 2. Clone and check out the repository
 
-Launch App is temporarily developed in the standalone
-[launch-app repository](https://github.com/waterloo-rocketry/launch-app) while
-the universe monorepo undergoes changes. Use this repository for new work.
+Launch App is developed in the standalone
+[launch-app repository](https://github.com/waterloo-rocketry/launch-app). Open
+pull requests against `main`.
 
 From a directory where you want to store your projects:
 
@@ -69,8 +69,9 @@ npm install
 branch, and `pull` brings in changes from GitHub. `--ff-only` stops rather than
 creating an unexpected merge if your local branch has diverged.
 
-If you already have a clone, use that copy: check `git status`, finish or save any
-in-progress work, then fetch and check out the Launch App branch:
+If you already have a clone of the standalone launch-app repository, use that
+copy: check `git status`, finish or save any in-progress work, then fetch and
+check out `main`:
 
 ```sh
 git fetch origin
@@ -82,8 +83,7 @@ npm install
 Run this example from the repository root. Do not clone again for each task.
 
 Run all npm commands from the root of this standalone repository, which contains
-`package.json` and `package-lock.json`. No Python, Docker, universe library build,
-or `rocketcan` submodule is needed for this setup.
+`package.json` and `package-lock.json`.
 
 ## 3. Start the application
 
@@ -219,8 +219,7 @@ local branch to the remote branch; subsequent commits only need `git push`.
    updates automatically. Re-run the relevant checks after making changes.
 
 Run the local checks above before requesting review, and ensure any configured
-CI checks pass before merging. The temporary repository does not inherit
-universe's workflows or its `required` status check.
+CI checks pass before merging.
 Once reviewed, approved, and passing, use **Squash and merge**,
 following the team's review process. Delete the merged branch on GitHub and
 update your local base branch before starting the next task:

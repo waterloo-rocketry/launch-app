@@ -1,12 +1,9 @@
 # Launch App
 
-Development temporarily lives in [waterloo-rocketry/launch-app](https://github.com/waterloo-rocketry/launch-app)
-while the universe monorepo undergoes changes.
-
-The app history was extracted from
-[universe commit 8f181f6](https://github.com/waterloo-rocketry/universe/commit/8f181f6e97033162c511450e2246f6aa7daa9977),
-preserving the original app commits and author attribution. The contribution
-guide and README updates that were still local at migration time are included.
+Launch App lives in the standalone
+[waterloo-rocketry/launch-app](https://github.com/waterloo-rocketry/launch-app)
+repository. Use this repository for development and open pull requests against
+`main`.
 
 Minimal React + TypeScript + Electron foundation. The dashboard is a placeholder;
 there is no backend telemetry or Omnibus integration. Local fake data sources are
