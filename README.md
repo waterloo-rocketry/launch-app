@@ -1,14 +1,25 @@
 # Launch App
 
+Development temporarily lives in [waterloo-rocketry/launch-app](https://github.com/waterloo-rocketry/launch-app)
+while the universe monorepo undergoes changes.
+
+The app history was extracted from
+[universe commit 8f181f6](https://github.com/waterloo-rocketry/universe/commit/8f181f6e97033162c511450e2246f6aa7daa9977),
+preserving the original app commits and author attribution. The contribution
+guide and README updates that were still local at migration time are included.
+
 Minimal React + TypeScript + Electron foundation. The dashboard is a placeholder;
 there is no backend telemetry or Omnibus integration. Local fake data sources are
 available for component development and tests; see [mock data](docs/mock-data.md).
+
+New to the project? Start with the [contribution guide](CONTRIBUTING.md) for tool
+installation, repository setup, and the branch-to-pull-request workflow.
 
 ## Setup
 
 Use **Node.js 24** (matching the repository's root `.nvmrc`) and npm.
 This Electron app is a standalone npm project with its own lockfile.
-Run all commands from `areas/apps/launch-app`:
+Run all commands from the repository root:
 
 ```sh
 npm install
