@@ -19,3 +19,43 @@ h1 {
 main {
   padding: 2rem;
 }
+h2 {
+  font-size: 1.25rem;
+}
+.channel-list {
+  border-collapse: collapse;
+  background: white;
+  font-variant-numeric: tabular-nums;
+}
+.channel-list th,
+.channel-list td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #dfe3e8;
+  text-align: left;
+}
+.channel-list thead th {
+  font-size: 0.875rem;
+  color: #5b6470;
+}
+.channel-status {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  background: #eef0f3;
+  color: #5b6470;
+}
+.channel-status--active {
+  background: #e3f4e8;
+  color: #1d6b35;
+}
+.channel-status--stale {
+  background: #fdf3dc;
+  color: #855c00;
+}
+.channel-status--missing,
+.channel-status--invalid,
+.channel-status--disconnected {
+  background: #fbe5e5;
+  color: #a32020;
+}

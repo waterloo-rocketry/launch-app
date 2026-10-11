@@ -126,9 +126,29 @@ fixed for the source's lifetime; select another source to exercise another case.
 Each subscription starts at sequence zero, emits its first frame after one
 interval, and owns its own timer. Unsubscribe is idempotent. Use Vitest fake timers
 to advance subscriptions in tests. Subscribe inside a React effect and return
-the cleanup function; source creation alone starts no work. No React provider or
-history/state store has been added. The development connection indicator uses a
-separate HTTP stream instead of this in-process subscription API.
+the cleanup function; source creation alone starts no work. The development
+connection indicator and telemetry monitor use the separate HTTP stream instead
+of this in-process subscription API.
+
+## Telemetry monitor
+
+In development, the dashboard lists each channel with its status, latest value,
+and reading age. `src/renderer/data/channel-store.ts` keeps a bounded history of
+recent readings per channel (default 100) and derives a status:
+
+| Status         | Meaning                                                       |
+| -------------- | ------------------------------------------------------------- |
+| `no data`      | No reading has arrived yet                                    |
+| `active`       | Latest reading is good and at most 2 seconds old              |
+| `stale`        | Latest reading is good but older than 2 seconds               |
+| `missing`      | Latest reading has `quality: "missing"`                       |
+| `invalid`      | Latest reading has `quality: "invalid"`                       |
+| `disconnected` | Its source sent a `disconnected` frame, or the stream dropped |
+
+Disconnected channels keep their last values. `useTelemetry` builds the store
+from the `signals` event, applies each valid `frame`, and keeps history when the
+server resends the catalogue on reconnect. Try `--scenario stale`, `missing`,
+`invalid`, or `disconnected`, or stop the server, to see each status.
 
 `src/shared/data-source.ts` defines the small `DataSource` boundary. Future
 components can receive that interface rather than importing Omnibus or depending
