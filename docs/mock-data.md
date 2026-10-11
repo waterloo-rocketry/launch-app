@@ -147,7 +147,10 @@ recent readings per channel (default 100) and derives a status:
 
 Disconnected channels keep their last values. `useTelemetry` builds the store
 from the `signals` event, applies each valid `frame`, and keeps history when the
-server resends the catalogue on reconnect. Try `--scenario stale`, `missing`,
+server resends the catalogue on reconnect. Above the table, operators can search
+channels by name or ID, show only problem channels (anything not `active`,
+including `no data`), and hide individual channels; a "Show N hidden" button
+brings hidden channels back. Filters reset when the app restarts. Try `--scenario stale`, `missing`,
 `invalid`, or `disconnected`, or stop the server, to see each status.
 
 `src/shared/data-source.ts` defines the small `DataSource` boundary. Future

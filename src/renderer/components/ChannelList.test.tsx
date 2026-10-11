@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ChannelList } from './ChannelList';
 import { TelemetryMonitor } from './TelemetryMonitor';
@@ -10,7 +10,9 @@ import { TestEventSource } from '../test/event-source';
 function renderList(frame?: DataFrame, nowMs = getMockFixture().timestampMs) {
   let state = createTelemetryState(MOCK_SIGNALS);
   if (frame) state = applyFrame(state, frame);
-  render(<ChannelList state={state} nowMs={nowMs} />);
+  render(
+    <ChannelList channels={Object.values(state.channels)} nowMs={nowMs} />,
+  );
 }
 
 const row = (label: string) =>
@@ -48,9 +50,14 @@ describe('channel list', () => {
     expect(row('Test pressure')).toHaveTextContent('—');
   });
 
-  it('handles an empty catalogue', () => {
-    render(<ChannelList state={createTelemetryState([])} nowMs={0} />);
-    expect(screen.getByText('No channels configured')).toBeInTheDocument();
+  it('shows a message when there are no channels to list', () => {
+    render(<ChannelList channels={[]} nowMs={0} emptyMessage="Nothing here" />);
+    expect(screen.getByText('Nothing here')).toBeInTheDocument();
+  });
+
+  it('only shows hide buttons when hiding is supported', () => {
+    renderList();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });
 
@@ -66,5 +73,69 @@ describe('telemetry monitor', () => {
 
     act(() => events.onerror?.());
     expect(row('Test pressure')).toHaveTextContent('disconnected');
+  });
+
+  describe('filters', () => {
+    function startMonitor() {
+      render(<TelemetryMonitor />);
+      const events = TestEventSource.instances[0];
+      act(() => events.signals(MOCK_SIGNALS));
+      // Missing pressure is the only problem channel.
+      act(() =>
+        events.frame({
+          ...getMockFixture('missing'),
+          readings: getMockFixture('missing').readings.map((reading) => ({
+            ...reading,
+            timestampMs: Date.now(),
+          })),
+        }),
+      );
+    }
+    const visible = () =>
+      screen.getAllByRole('rowheader').map((header) => header.textContent);
+
+    it('searches channels by name', () => {
+      startMonitor();
+      fireEvent.change(
+        screen.getByRole('searchbox', { name: 'Search channels' }),
+        {
+          target: { value: 'temp' },
+        },
+      );
+      expect(visible()).toEqual(['Test temperature']);
+    });
+
+    it('says when nothing matches', () => {
+      startMonitor();
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: 'zzz' },
+      });
+      expect(
+        screen.getByText('No channels match the filters'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows only problem channels', () => {
+      startMonitor();
+      fireEvent.click(
+        screen.getByRole('checkbox', { name: 'Show only problems' }),
+      );
+      expect(visible()).toEqual(['Test pressure']);
+    });
+
+    it('hides channels and brings them back', () => {
+      startMonitor();
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Hide Test pressure' }),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Hide Test status' }));
+      expect(visible()).toEqual(['Test temperature', 'Test enabled']);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Show 2 hidden' }));
+      expect(visible()).toHaveLength(MOCK_SIGNALS.length);
+      expect(
+        screen.queryByRole('button', { name: /hidden/ }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

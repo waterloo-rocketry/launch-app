@@ -59,3 +59,33 @@ h2 {
   background: #fbe5e5;
   color: #a32020;
 }
+.channel-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.channel-filters input[type='search'] {
+  min-width: 16rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+  font: inherit;
+}
+.channel-filters label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.channel-filters button,
+.channel-list button {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid #c9ced6;
+  border-radius: 6px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}

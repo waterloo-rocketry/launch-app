@@ -5,13 +5,13 @@ Launch ops should decide what is actually useful before anything here is added.
 
 ## Finding things faster
 
-- **Search and filter**: type to find a channel, or hide channels you don't
-  care about (issue #25).
 - **Group by board**: put channels under headings like "Injector" or
   "Recovery" so related ones sit together.
 - **Problems first**: sort so stale, missing, and disconnected channels move to
   the top.
 - **Pin channels**: keep the most important channels at the top of the list.
+- **Remember filters**: keep searches and hidden channels after the app
+  restarts.
 - **Summary line**: show counts above the table, like "12 active, 2 stale,
   1 disconnected".
 
