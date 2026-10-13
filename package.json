@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && tsc -p tsconfig.tools.json && tsc -p tsconfig.mock.json"
+    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && tsc -p tsconfig.tools.json && tsc -p tsconfig.mock.json",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -30,6 +31,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.3",
     "electron": "^44.5.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.10.0",
