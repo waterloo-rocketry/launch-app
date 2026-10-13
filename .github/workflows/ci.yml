@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, jpetruzz/ci-cd]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    name: Lint, tests, and build
+  lint:
+    name: Lint and formatting
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -32,10 +32,22 @@ jobs:
         run: npm run format:check
       - name: Lint
         run: npm run lint
+  test:
+    name: Tests and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Test with coverage
         run: npm run test:coverage
-      - name: Type check and build
-        run: npm run build
       - name: Upload coverage reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -44,3 +56,19 @@ jobs:
           path: coverage/
           if-no-files-found: ignore
           retention-days: 14
+  build:
+    name: Type check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check and build
+        run: npm run build
