@@ -49,6 +49,7 @@ Ctrl+C stops both. Use Ctrl+Shift+I (Cmd+Option+I on macOS) to open developer to
 
 ```sh
 npm run test         # Vitest + React Testing Library, single run
+npm run test:coverage # tests with V8 coverage reports
 npm run typecheck    # main, renderer, and tooling TypeScript checks
 npm run lint         # ESLint for TypeScript, React, and scripts
 npm run format       # format source/configuration/docs with Prettier
@@ -56,6 +57,12 @@ npm run format:check # check formatting without changes
 npm run build        # typecheck and build renderer + main + preload
 npm run start        # open Electron using the built renderer
 ```
+
+GitHub Actions runs formatting, lint, tests with coverage, and the build (including
+TypeScript checks) on pull requests and pushes to `main`. Coverage reports include
+untested source files and are available as a `coverage` workflow artifact for
+14 days. Locally, open `coverage/index.html` after `npm run test:coverage`.
+Coverage is reported without a minimum percentage requirement.
 
 The build writes `dist/main/index.cjs`, `dist/main/preload.cjs`, and
 `dist/renderer/`. Run `npm run build` before `npm run start`. Build output can
