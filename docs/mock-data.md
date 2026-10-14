@@ -145,7 +145,8 @@ recent readings per channel (default 100) and derives a status:
 | `invalid`      | Latest reading has `quality: "invalid"`                       |
 | `disconnected` | Its source sent a `disconnected` frame, or the stream dropped |
 
-Disconnected channels keep their last values. `useTelemetry` builds the store
+Disconnected channels keep their last values. `useTelemetry` reads the stream URL
+it is given (`App` passes the mock URL in development), builds the store
 from the `signals` event, applies each valid `frame`, and keeps history when the
 server resends the catalogue on reconnect. Above the table, operators can search
 channels by name or ID, show only problem channels (anything not `active`,

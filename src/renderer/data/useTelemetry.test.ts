@@ -2,13 +2,14 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getChannelStatus } from './channel-store';
 import { getMockFixture, MOCK_SIGNALS } from './mock/fixtures';
-import { useTelemetry } from './useTelemetry';
+import { useTelemetry, type TelemetryOptions } from './useTelemetry';
 import { TestEventSource } from '../test/event-source';
 
 const PRESSURE = 'test.pressure';
+const URL = '/test-api/events';
 
-function setup(options?: Parameters<typeof useTelemetry>[0]) {
-  const hook = renderHook(() => useTelemetry(options));
+function setup(options: Partial<TelemetryOptions> = {}) {
+  const hook = renderHook(() => useTelemetry({ url: URL, ...options }));
   return { ...hook, events: TestEventSource.instances[0] };
 }
 
@@ -19,7 +20,7 @@ afterEach(() => {
 describe('useTelemetry', () => {
   it('builds channels from the catalogue and records frames', () => {
     const { result, events } = setup();
-    expect(events.url).toBe('/mock-api/events');
+    expect(events.url).toBe(URL);
     expect(result.current).toMatchObject({ stream: 'connecting', state: null });
 
     act(() => events.signals(MOCK_SIGNALS));

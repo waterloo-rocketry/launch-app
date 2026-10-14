@@ -4,8 +4,13 @@ import { useTelemetry } from '../data/useTelemetry';
 import { ChannelFilters } from './ChannelFilters';
 import { ChannelList } from './ChannelList';
 
-export function TelemetryMonitor() {
-  const { state, nowMs } = useTelemetry();
+interface TelemetryMonitorProps {
+  /** Telemetry event stream URL. */
+  url: string;
+}
+
+export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
+  const { state, nowMs } = useTelemetry({ url });
   const [filter, setFilter] = useState(EMPTY_FILTER);
 
   const content = () => {

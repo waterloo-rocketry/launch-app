@@ -63,10 +63,11 @@ describe('channel list', () => {
 
 describe('telemetry monitor', () => {
   it('waits for the catalogue, then lists live channels', () => {
-    render(<TelemetryMonitor />);
+    render(<TelemetryMonitor url="/test-api/events" />);
     expect(screen.getByText('Waiting for channels')).toBeInTheDocument();
 
     const events = TestEventSource.instances[0];
+    expect(events.url).toBe('/test-api/events');
     act(() => events.signals(MOCK_SIGNALS));
     act(() => events.frame({ ...getMockFixture(), timestampMs: Date.now() }));
     expect(row('Test pressure')).toHaveTextContent('42 kPa');
@@ -77,7 +78,7 @@ describe('telemetry monitor', () => {
 
   describe('filters', () => {
     function startMonitor() {
-      render(<TelemetryMonitor />);
+      render(<TelemetryMonitor url="/test-api/events" />);
       const events = TestEventSource.instances[0];
       act(() => events.signals(MOCK_SIGNALS));
       // Missing pressure is the only problem channel.
