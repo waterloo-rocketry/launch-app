@@ -28,6 +28,22 @@ export default defineConfig(({ command }) => ({
         target: process.env.MOCK_SERVER_URL ?? 'http://127.0.0.1:6768',
         rewrite: (path) => path.replace(/^\/mock-api/, ''),
         configure(proxy) {
+          proxy.on('error', (_error, request, response) => {
+            // A 502 permanently closes EventSource. End a valid SSE response
+            // instead so both development consumers retry when the mock starts.
+            if (
+              request.url?.split('?')[0] === '/events' &&
+              'writeHead' in response &&
+              !response.headersSent &&
+              !response.writableEnded
+            ) {
+              response.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+              });
+              response.end('retry: 1000\n\n');
+            }
+          });
           proxy.on('proxyRes', (upstream, _request, response) => {
             // Propagate abrupt server shutdown to EventSource instead of leaving
             // the browser waiting on a proxy response that can no longer stream.

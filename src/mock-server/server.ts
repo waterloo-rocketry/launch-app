@@ -51,6 +51,18 @@ export function createMockServer(options: MockSourceOptions = {}) {
 
   server.on('listening', () => {
     unsubscribe = source.subscribe((frame) => {
+      // Live samples use measurement time, not the number of timer callbacks.
+      // Explicit epochs retain the deterministic timeline used by tests.
+      if (options.startTimeMs === undefined) {
+        const timestampMs = Date.now();
+        frame.timestampMs = timestampMs;
+        if (options.scenario !== 'stale') {
+          frame.readings = frame.readings.map((reading) => ({
+            ...reading,
+            timestampMs,
+          }));
+        }
+      }
       latest = frame;
       for (const client of clients) send(client, 'frame', frame);
     });

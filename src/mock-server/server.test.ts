@@ -1,12 +1,13 @@
 // @vitest-environment node
 import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMockServer } from './server';
 import { isDataFrame } from '../shared/data-source';
 
 let mock: ReturnType<typeof createMockServer> | undefined;
 afterEach(async () => {
+  vi.restoreAllMocks();
   await mock?.close();
   mock = undefined;
 });
@@ -19,6 +20,39 @@ async function start() {
 }
 
 describe('standalone mock server', () => {
+  it('timestamps live readings at emission time after a clock advance', async () => {
+    const initialTime = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(initialTime);
+    mock = createMockServer({ intervalMs: 20 });
+    mock.server.listen(0, '127.0.0.1');
+    await once(mock.server, 'listening');
+    clock.mockReturnValue(initialTime + 5_000);
+    const base = `http://127.0.0.1:${(mock.server.address() as AddressInfo).port}`;
+    const response = await fetch(`${base}/events`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    const reader = response.body!.getReader();
+    let body = '';
+    const decoder = new TextDecoder();
+    while (!body.includes('event: frame')) {
+      const { value, done } = await reader.read();
+      if (done) throw new Error('Stream ended before a frame arrived');
+      body += decoder.decode(value, { stream: true });
+    }
+    await reader.cancel();
+    const block = body
+      .split('\n\n')
+      .find((item) => item.startsWith('event: frame'))!;
+    const frame = JSON.parse(block.split('data: ')[1]);
+    expect(frame.timestampMs).toBe(initialTime + 5_000);
+    expect(
+      frame.readings.every(
+        (reading: { timestampMs: number }) =>
+          reading.timestampMs === initialTime + 5_000,
+      ),
+    ).toBe(true);
+  });
+
   it('serves health checks and rejects unsupported endpoints and methods', async () => {
     const base = await start();
     expect(await (await fetch(`${base}/health`)).json()).toEqual({

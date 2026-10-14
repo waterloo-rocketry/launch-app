@@ -10,5 +10,11 @@ export default defineConfig({
       'src/renderer/**/*.test.{ts,tsx}',
       'src/mock-server/**/*.test.ts',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/renderer/test/**'],
+    },
   },
 });
