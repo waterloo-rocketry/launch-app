@@ -70,3 +70,25 @@ export function isDataFrame(value: unknown): value is DataFrame {
     );
   });
 }
+
+/** Validate the network signal catalogue before building channels from it. */
+export function isSignalDefinitionList(
+  value: unknown,
+): value is SignalDefinition[] {
+  return (
+    Array.isArray(value) &&
+    value.every((item: unknown) => {
+      if (typeof item !== 'object' || item === null) return false;
+      const signal = item as Record<string, unknown>;
+      return (
+        typeof signal.id === 'string' &&
+        signal.id.length > 0 &&
+        typeof signal.label === 'string' &&
+        (signal.kind === 'number' ||
+          signal.kind === 'boolean' ||
+          signal.kind === 'string') &&
+        typeof signal.unit === 'string'
+      );
+    })
+  );
+}

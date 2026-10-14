@@ -15,4 +15,10 @@ export class TestEventSource extends EventTarget {
       new MessageEvent('frame', { data: JSON.stringify(data) }),
     );
   }
+
+  signals(data: unknown) {
+    this.dispatchEvent(
+      new MessageEvent('signals', { data: JSON.stringify(data) }),
+    );
+  }
 }
