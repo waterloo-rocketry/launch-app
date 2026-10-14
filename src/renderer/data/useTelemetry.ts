@@ -14,7 +14,8 @@ export type StreamStatus =
   'connecting' | 'connected' | 'disconnected' | 'invalid';
 
 export interface TelemetryOptions {
-  url?: string;
+  /** Event stream to read; the caller decides between the mock and a real backend. */
+  url: string;
   /** Read once when the stream opens; change `url` or remount to apply a new size. */
   historySize?: number;
   /** How often `nowMs` advances so channels turn stale even when frames stop. */
@@ -30,10 +31,10 @@ export interface Telemetry {
 }
 
 export function useTelemetry({
-  url = '/mock-api/events',
+  url,
   historySize = DEFAULT_HISTORY_SIZE,
   clockIntervalMs = 500,
-}: TelemetryOptions = {}): Telemetry {
+}: TelemetryOptions): Telemetry {
   const [stream, setStream] = useState<StreamStatus>('connecting');
   const [state, setState] = useState<TelemetryState | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
