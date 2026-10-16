@@ -14,7 +14,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/renderer/test/**'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/renderer/test/**',
+        // Process and renderer bootstraps are integration-test concerns.
+        'src/main/index.ts',
+        'src/main/preload.ts',
+        'src/mock-server/main.ts',
+        'src/renderer/main.tsx',
+      ],
       thresholds: {
         lines: 85,
         functions: 85,

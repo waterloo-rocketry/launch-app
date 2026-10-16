@@ -59,10 +59,12 @@ npm run start        # open Electron using the built renderer
 ```
 
 GitHub Actions runs formatting, lint, tests with coverage, and the build (including
-TypeScript checks) on pull requests and pushes to `main`. Coverage reports include
-untested source files and are available as a `coverage` workflow artifact for
-14 days. Locally, open `coverage/index.html` after `npm run test:coverage`.
-Coverage is reported without a minimum percentage requirement.
+TypeScript checks) on pull requests and pushes to `main`. The coverage job requires
+at least 85% statements, branches, functions, and lines. It measures application
+logic and excludes the Electron, mock server, and renderer startup entry points,
+which are integration-test concerns. Coverage reports are available as a
+`coverage` workflow artifact for 14 days. Locally, open `coverage/index.html` after
+`npm run test:coverage`.
 
 The build writes `dist/main/index.cjs`, `dist/main/preload.cjs`, and
 `dist/renderer/`. Run `npm run build` before `npm run start`. Build output can
