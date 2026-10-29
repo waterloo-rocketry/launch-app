@@ -145,3 +145,8 @@ h2 {
   font-size: 0.875rem;
   color: #5b6470;
 }
+.progress-bar-demo {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
