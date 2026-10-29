@@ -2,8 +2,8 @@ import type { SignalDefinition, SignalReading } from '../../shared/data-source';
 import {
   getChannelStatus,
   getLatestReading,
+  type ChannelState,
   type ChannelStatus,
-  type TelemetryState,
 } from '../data/channel-store';
 
 const STATUS_LABELS: Record<ChannelStatus, string> = {
@@ -16,9 +16,12 @@ const STATUS_LABELS: Record<ChannelStatus, string> = {
 };
 
 interface ChannelListProps {
-  state: TelemetryState;
+  channels: readonly ChannelState[];
   nowMs: number;
   staleAfterMs?: number;
+  emptyMessage?: string;
+  /** Shows a hide button on each row when provided. */
+  onHide?: (signalId: string) => void;
 }
 
 function formatValue(signal: SignalDefinition, reading?: SignalReading) {
@@ -32,9 +35,14 @@ function formatAge(nowMs: number, reading?: SignalReading) {
   return `${(Math.max(0, nowMs - reading.timestampMs) / 1000).toFixed(1)} s ago`;
 }
 
-export function ChannelList({ state, nowMs, staleAfterMs }: ChannelListProps) {
-  const channels = Object.values(state.channels);
-  if (channels.length === 0) return <p>No channels configured</p>;
+export function ChannelList({
+  channels,
+  nowMs,
+  staleAfterMs,
+  emptyMessage = 'No channels configured',
+  onHide,
+}: ChannelListProps) {
+  if (channels.length === 0) return <p>{emptyMessage}</p>;
 
   return (
     <table className="channel-list">
@@ -44,6 +52,7 @@ export function ChannelList({ state, nowMs, staleAfterMs }: ChannelListProps) {
           <th scope="col">Status</th>
           <th scope="col">Latest value</th>
           <th scope="col">Updated</th>
+          {onHide && <th scope="col" aria-label="Actions" />}
         </tr>
       </thead>
       <tbody>
@@ -60,6 +69,17 @@ export function ChannelList({ state, nowMs, staleAfterMs }: ChannelListProps) {
               </td>
               <td>{formatValue(channel.signal, latest)}</td>
               <td>{formatAge(nowMs, latest)}</td>
+              {onHide && (
+                <td>
+                  <button
+                    type="button"
+                    aria-label={`Hide ${channel.signal.label}`}
+                    onClick={() => onHide(channel.signal.id)}
+                  >
+                    Hide
+                  </button>
+                </td>
+              )}
             </tr>
           );
         })}
