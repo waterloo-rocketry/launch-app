@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Header } from "./Header";
 import "../styles/baseComponent.css";
 
 export type WidgetStatus = "active" | "no-data" | "error" | "stale";
