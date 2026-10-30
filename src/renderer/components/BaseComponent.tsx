@@ -37,7 +37,7 @@ export default function BaseComponent({
       data-widget-id={id}
       aria-label={title}
     >
-      <Header title={`${title ?? ""}${status === "stale" ? " (Stale)" : ""}`} />
+      <h1>{`${title ?? ""}${status === "stale" ? " (Stale)" : ""}`}</h1>
       {channel && <p className="widget__channel">{channel}</p>}
       <div className="widget__body">{renderContents()}</div>
     </section>

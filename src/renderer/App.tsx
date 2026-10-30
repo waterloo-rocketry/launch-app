@@ -1,4 +1,5 @@
 import { APP_NAME } from '../shared';
+import BaseComponent from './components/BaseComponent';
 import { Header } from './components/Header';
 import { MockConnectionStatus } from './components/MockConnectionStatus';
 import { TelemetryMonitor } from './components/TelemetryMonitor';
@@ -15,6 +16,13 @@ export default function App() {
         {/* Development only until a production telemetry backend exists. */}
         {import.meta.env.DEV && <TelemetryMonitor url={MOCK_TELEMETRY_URL} />}
         <section aria-label="Dashboard">
+          <BaseComponent id={"TestID"}
+                          children={<p>TestChild</p>}
+                          componentType={"Test"}
+                          status={"active"}
+                          title={"BaseComponentTest"}
+          />
+
           <p>Dashboard coming soon</p>
         </section>
       </main>
