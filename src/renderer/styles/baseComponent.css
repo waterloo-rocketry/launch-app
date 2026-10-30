@@ -1,0 +1,21 @@
+   .widget { 
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+   }
+   .widget__body { 
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+   }
+   .widget--stale .widget__body { 
+      opacity: 0.5;
+   }
+   .widget--error .widget__body { 
+      color: #b00020;
+   }
+   .widget--no-data .widget__body { 
+      color: #777;
+   }
