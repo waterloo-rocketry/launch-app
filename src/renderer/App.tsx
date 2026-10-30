@@ -23,14 +23,6 @@ export default function App() {
                           title={"BaseComponentTest"}
           />
 
-          <BaseComponent id={"ErrorID"}
-                          children={<p>This one should have an error</p>}
-                          componentType={"Test"}
-                          status={"error"}
-                          title={"Please have an error"}
-                          errorMessage={"Hello I am an error message"}
-          />
-
           <p>Dashboard coming soon</p>
         </section>
       </main>
