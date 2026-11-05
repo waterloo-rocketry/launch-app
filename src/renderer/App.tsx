@@ -1,5 +1,4 @@
 import { APP_NAME } from '../shared';
-import BaseComponent from './components/BaseComponent';
 import { Header } from './components/Header';
 import { MockConnectionStatus } from './components/MockConnectionStatus';
 import { TelemetryMonitor } from './components/TelemetryMonitor';
