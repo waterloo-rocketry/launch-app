@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
-import "../styles/baseComponent.css";
+import type { ReactNode } from 'react';
+import '../styles/baseComponent.css';
 import {
   getChannelStatus,
   type ChannelState,
-  type ChannelStatus
-} from "../data/channel-store";
+  type ChannelStatus,
+} from '../data/channel-store';
 
 /**
  * BaseComponent
@@ -47,7 +47,7 @@ import {
  *   </BaseComponent>
  */
 
-export type ComponentType = "numeric" | "plot" | "gauge";
+export type ComponentType = 'numeric' | 'plot' | 'gauge';
 
 interface BaseProps {
   id: string;
@@ -60,29 +60,38 @@ interface BaseProps {
 }
 
 export default function BaseComponent({
-  id, componentType, channel, title, currentTime, errorMessage, children,
+  id,
+  componentType,
+  channel,
+  title,
+  currentTime,
+  errorMessage,
+  children,
 }: BaseProps) {
-  const status: ChannelStatus = channel ? getChannelStatus(channel, currentTime) : "missing";
-  const heading = title ?? channel?.signal.label ?? "";
+  const status: ChannelStatus = channel
+    ? getChannelStatus(channel, currentTime)
+    : 'missing';
+  const heading = title ?? channel?.signal.label ?? '';
 
   const renderContents = () => {
     switch (status) {
-      case "active":
-      case "stale":
-      case "disconnected":
+      case 'active':
+      case 'stale':
+      case 'disconnected':
         return children;
-      case "no-data":
+      case 'no-data':
         return <p>No data</p>;
-      case "missing":
-        return <p role="alert">{errorMessage ?? "Channel not found"}</p>;
-      case "invalid":
-        return <p role="alert">{errorMessage ?? "Invalid channel data"}</p>;
+      case 'missing':
+        return <p role="alert">{errorMessage ?? 'Channel not found'}</p>;
+      case 'invalid':
+        return <p role="alert">{errorMessage ?? 'Invalid channel data'}</p>;
       default:
         return null;
     }
   };
 
-  const suffix = status === "stale" || status === "disconnected" ? ` (${status})` : "";
+  const suffix =
+    status === 'stale' || status === 'disconnected' ? ` (${status})` : '';
 
   return (
     <section
