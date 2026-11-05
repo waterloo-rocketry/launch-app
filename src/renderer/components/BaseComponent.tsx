@@ -6,6 +6,47 @@ import {
   type ChannelStatus
 } from "../data/channel-store";
 
+/**
+ * BaseComponent
+ *
+ * Common container for numeric, plot, and gauge widgets. Renders a heading,
+ * a status presentation, and a body slot for arbitrary visualization content.
+ * Doesn't create any data visualizations, that's what children are for.
+ *
+ * Props:
+ *  - id            Unique, stable identifier for this widget instance.
+ *                  Rendered as `data-widget-id`.
+ *  - componentType "numeric" | "plot" | "gauge". Used only as a CSS class
+ *                  (`widget--<type>`); the container does not branch on it.
+ *  - channel       The ChannelState the widget is using
+ *  - title         The title. Default is channel signal label.
+ *  - currentTime   Current time in ms. Used to decide whether the channel is
+ *                  stale, so the parent must pass a ticking value (e.g. `nowMs`
+ *                  from useTelemetry) or staleness will never update. If this
+ *                  needs changing in the future go for it
+ *  - errorMessage  Overrides the default text for the missing/invalid states.
+ *  - children      What is rendered inside the widget
+ *
+ *
+ * Children are unmounted in the no-data, missing, and invalid states, so any
+ * internal state in them (e.g. a plot's zoom level) resets when data returns.
+ *
+ * Each status is also a class on the wrapper (`widget--active`, `widget--stale`,
+ * etc.) for styling. The wrapper fills its parent, and `.widget__body` takes the
+ * remaining space, so size a widget by sizing its parent. Update styling for new
+ * types of widgets as needed
+ *
+ * Example:
+ *   <BaseComponent
+ *     id="pressure"
+ *     componentType="numeric"
+ *     channel={channels["test.pressure"]}
+ *     currentTime={nowMs}
+ *   >
+ *     <p>42 kPa</p>
+ *   </BaseComponent>
+ */
+
 export type ComponentType = "numeric" | "plot" | "gauge";
 
 interface BaseProps {
