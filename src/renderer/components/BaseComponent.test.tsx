@@ -94,7 +94,9 @@ describe('BaseComponent', () => {
   it('shows an alert for invalid readings, with a custom message if given', () => {
     const channel = channelsAfter('invalid')['test.pressure'];
     const { unmount } = renderBase(channel);
-    expect(screen.getByRole('alert')).toHaveTextContent('Invalid channel data!');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Invalid channel data!',
+    );
     expect(contentOf('child content')).toHaveAttribute('aria-hidden', 'true');
     unmount();
 
