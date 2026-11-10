@@ -3,7 +3,6 @@ import '../styles/baseComponent.css';
 import {
   getChannelStatus,
   type ChannelState,
-  type ChannelStatus,
 } from '../data/channel-store';
 
 /**
