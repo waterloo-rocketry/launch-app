@@ -35,6 +35,10 @@ function renderBase(
   );
 }
 
+function contentOf(text: string) {
+  return screen.getByText(text).parentElement;
+}
+
 describe('BaseComponent', () => {
   it('shows children and the channel label when active', () => {
     const { container } = renderBase(channelsAfter('nominal')['test.pressure']);
@@ -69,28 +73,65 @@ describe('BaseComponent', () => {
     },
   );
 
-  it('shows a no-data message and hides children before any reading', () => {
+  it('keeps children mounted but covered by a message before any reading', () => {
     renderBase(channelsAfter()['test.pressure']);
 
-    expect(screen.getByText('No data')).toBeInTheDocument();
-    expect(screen.queryByText('child content')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('No data!');
+    expect(screen.getByText('child content')).toBeInTheDocument();
+    expect(contentOf('child content')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('shows an alert when the channel is undefined', () => {
+  it('keeps children mounted but covered when the channel is undefined', () => {
     const { container } = renderBase(undefined);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Channel not found');
-    expect(screen.queryByText('child content')).not.toBeInTheDocument();
-    expect(container.querySelector('section')).toHaveClass('widget--missing');
+    expect(screen.getByRole('alert')).toHaveTextContent('Channel not found!');
+    expect(contentOf('child content')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('section')).toHaveClass(
+      'widget--missing-channel',
+    );
   });
 
   it('shows an alert for invalid readings, with a custom message if given', () => {
     const channel = channelsAfter('invalid')['test.pressure'];
     const { unmount } = renderBase(channel);
-    expect(screen.getByRole('alert')).toHaveTextContent('Invalid channel data');
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid channel data!');
+    expect(contentOf('child content')).toHaveAttribute('aria-hidden', 'true');
     unmount();
 
     renderBase(channel, { errorMessage: 'Sensor fault' });
     expect(screen.getByRole('alert')).toHaveTextContent('Sensor fault');
+  });
+
+  it('does not cover children or show an alert when active, stale, or disconnected', () => {
+    renderBase(channelsAfter('nominal')['test.pressure']);
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(contentOf('child content')).toHaveAttribute('aria-hidden', 'false');
+  });
+
+  it('does not remount children when the status changes', () => {
+    const channel = channelsAfter('nominal')['test.pressure'];
+    const { rerender } = renderBase(channel);
+    const before = screen.getByText('child content');
+
+    // Same channel, much later: now stale. Then no channel at all: missing-channel.
+    for (const [ch, time] of [
+      [channel, NOW + 60_000],
+      [undefined, NOW + 60_000],
+      [channel, NOW],
+    ] as const) {
+      rerender(
+        <BaseComponent
+          id="w1"
+          componentType="numeric"
+          channel={ch}
+          currentTime={time}
+        >
+          <p>child content</p>
+        </BaseComponent>,
+      );
+      // Same DOM node means React kept it mounted instead of recreating it.
+      expect(screen.getByText('child content')).toBe(before);
+    }
   });
 });
