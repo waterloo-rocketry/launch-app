@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 import '../styles/baseComponent.css';
-import {
-  getChannelStatus,
-  type ChannelState,
-} from '../data/channel-store';
+import { getChannelStatus, type ChannelState } from '../data/channel-store';
 
 /**
  * BaseComponent
