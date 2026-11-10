@@ -19,13 +19,13 @@ export interface gridItem {
 
 export interface dashboardLayout {
     version: number;
-    numberOfCol: number;
+    numberOfCols: number;
     items: gridItem[]
 }
 
 const DEFAULT_LAYOUT: dashboardLayout = {
     version: 1,
-    numberOfCol: 2,
+    numberOfCols: 2,
     items: [
         {id: 'temperature-progress-bar', x: 0, y: 0, w: 1, h: 1, widgetConfig: {
             kind: 'progress-bar',
