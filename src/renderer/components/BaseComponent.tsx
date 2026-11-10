@@ -27,10 +27,6 @@ import {
  *  - errorMessage  Overrides the default text for the missing/invalid states.
  *  - children      What is rendered inside the widget
  *
- *
- * Children are unmounted in the no-data, missing, and invalid states, so any
- * internal state in them (e.g. a plot's zoom level) resets when data returns.
- *
  * Each status is also a class on the wrapper (`widget--active`, `widget--stale`,
  * etc.) for styling. The wrapper fills its parent, and `.widget__body` takes the
  * remaining space, so size a widget by sizing its parent. Update styling for new
@@ -68,39 +64,52 @@ export default function BaseComponent({
   errorMessage,
   children,
 }: BaseProps) {
-  const status: ChannelStatus = channel
+  const componentStatus = channel
     ? getChannelStatus(channel, currentTime)
-    : 'missing';
+    : 'missing-channel';
   const heading = title ?? channel?.signal.label ?? '';
 
-  const renderContents = () => {
-    switch (status) {
-      case 'active':
-      case 'stale':
-      case 'disconnected':
-        return children;
+  //Overlays any errors, otherwise no message is dispalyed
+  const getOverlayMessage = (): string | null => {
+    switch (componentStatus) {
       case 'no-data':
-        return <p>No data</p>;
+        return errorMessage ?? 'No data!';
       case 'missing':
-        return <p role="alert">{errorMessage ?? 'Channel not found'}</p>;
+        return errorMessage ?? 'Missing data!';
       case 'invalid':
-        return <p role="alert">{errorMessage ?? 'Invalid channel data'}</p>;
+        return errorMessage ?? 'Invalid channel data!';
+      case 'missing-channel':
+        return errorMessage ?? 'Channel not found!';
       default:
         return null;
     }
   };
 
-  const suffix =
-    status === 'stale' || status === 'disconnected' ? ` (${status})` : '';
+  const overlayMessage = getOverlayMessage();
+  const suffix = componentStatus === 'stale' ||
+    componentStatus === 'disconnected' ? ` (${componentStatus})` : '';
 
   return (
     <section
-      className={`widget widget--${componentType} widget--${status}`}
+      className={`widget widget--${componentType} widget--${componentStatus}`}
       data-widget-id={id}
       aria-label={heading}
     >
       <h3>{heading + suffix}</h3>
-      <div className="widget__body">{renderContents()}</div>
+      <div className="widget__body">
+        <div
+          className="widget__content"
+          aria-hidden={overlayMessage !== null}
+          inert={overlayMessage !== null}
+        >
+          {children}
+        </div>
+        {overlayMessage !== null && (
+          <p className="widget__overlay" role="alert">
+            {overlayMessage}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
