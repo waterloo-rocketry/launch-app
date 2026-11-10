@@ -86,8 +86,10 @@ export default function BaseComponent({
   };
 
   const overlayMessage = getOverlayMessage();
-  const suffix = componentStatus === 'stale' ||
-    componentStatus === 'disconnected' ? ` (${componentStatus})` : '';
+  const suffix =
+    componentStatus === 'stale' || componentStatus === 'disconnected'
+      ? ` (${componentStatus})`
+      : '';
 
   return (
     <section
