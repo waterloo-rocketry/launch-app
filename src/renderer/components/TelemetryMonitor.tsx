@@ -4,6 +4,8 @@ import { useTelemetry } from '../data/useTelemetry';
 import { ChannelFilters } from './ChannelFilters';
 import { ChannelList } from './ChannelList';
 import { ProgressBar } from './ProgressBar';
+import { DashboardGrid } from './DashboardGrid';
+import { DEFAULT_LAYOUT } from '../Layout';
 
 interface TelemetryMonitorProps {
   /** Telemetry event stream URL. */
@@ -22,31 +24,33 @@ export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
     const pressure = state.channels['test.pressure'];
     const temperature = state.channels['test.temperature'];
     return (
-      <>
-        <ChannelFilters filter={filter} onChange={setFilter} />
-        <ChannelList
-          channels={filterChannels(channels, filter, nowMs)}
-          nowMs={nowMs}
-          emptyMessage="No channels match the filters"
-          onHide={(signalId) =>
-            setFilter((current) => ({
-              ...current,
-              hidden: new Set(current.hidden).add(signalId),
-            }))
-          }
-        />
-        <div className="progress-bar-demo">
-          {pressure && (
-            <ProgressBar channel={pressure} min={0} max={100} nowMs={nowMs} />
-          )}
-          {pressure && (
-            <ProgressBar channel={pressure} min={30} max={45} nowMs={nowMs} />
-          )}
-          {temperature && (
-            <ProgressBar channel={temperature} min={0} max={40} nowMs={nowMs} />
-          )}
-        </div>
-      </>
+
+      <DashboardGrid layout={DEFAULT_LAYOUT} telemetryState={state} nowMs={nowMs}></DashboardGrid>
+      // <>
+      //   <ChannelFilters filter={filter} onChange={setFilter} />
+      //   <ChannelList
+      //     channels={filterChannels(channels, filter, nowMs)}
+      //     nowMs={nowMs}
+      //     emptyMessage="No channels match the filters"
+      //     onHide={(signalId) =>
+      //       setFilter((current) => ({
+      //         ...current,
+      //         hidden: new Set(current.hidden).add(signalId),
+      //       }))
+      //     }
+      //   />
+      //   <div className="progress-bar-demo">
+      //     {pressure && (
+      //       <ProgressBar channel={pressure} min={0} max={100} nowMs={nowMs} />
+      //     )}
+      //     {pressure && (
+      //       <ProgressBar channel={pressure} min={30} max={45} nowMs={nowMs} />
+      //     )}
+      //     {temperature && (
+      //       <ProgressBar channel={temperature} min={0} max={40} nowMs={nowMs} />
+      //     )}
+      //   </div>
+      // </>
     );
   };
 

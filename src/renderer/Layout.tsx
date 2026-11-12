@@ -23,17 +23,17 @@ export interface dashboardLayout {
     items: gridItem[]
 }
 
-const DEFAULT_LAYOUT: dashboardLayout = {
+export const DEFAULT_LAYOUT: dashboardLayout = {
     version: 1,
     numberOfCols: 2,
     items: [
         {id: 'temperature-progress-bar', x: 0, y: 0, w: 1, h: 1, widgetConfig: {
             kind: 'progress-bar',
-            signalId: 'temp', 
+            signalId: 'test.temperature', 
             min: -20, 
             max: -20
         }},
-        {id: 'all-channel-list', x: 0, y: 0, w: 1, h: 1, widgetConfig: {
+        {id: 'all-channel-list', x: 2, y: 1, w: 1, h: 1, widgetConfig: {
             kind: 'channel-list',
             problemOnly: false
         }}
