@@ -31,11 +31,11 @@ export function renderWidget(config: widgetConfig, {telemetryState, nowMs}: dash
 
 export function DashboardGrid ({layout, telemetryState, nowMs}: dashboardGridProps) {
     
-    const {numberOfCols, items} = layout;
+    const {numberOfCols, numberOfRows, items} = layout;
 
 
     return (
-        <div className="dashboard-grid" style={{gridTemplateColumns: `repeat(${numberOfCols}, 1fr)`}}>
+        <div className="dashboard-grid" style={{gridTemplateColumns: `repeat(${numberOfCols}, 1fr)`, gridTemplateRows: `repeat(${numberOfRows}, 1fr)`}}>
             {
                 items.map((item) => (
                     <div key={item.id} className="dashboard-cell" style={{gridColumn: `${item.x + 1} / span ${item.w}`, gridRow: `${item.y + 1} / span ${item.h}`}}>

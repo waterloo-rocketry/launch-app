@@ -20,20 +20,22 @@ export interface gridItem {
 export interface dashboardLayout {
     version: number;
     numberOfCols: number;
+    numberOfRows: number;
     items: gridItem[]
 }
 
 export const DEFAULT_LAYOUT: dashboardLayout = {
     version: 1,
     numberOfCols: 2,
+    numberOfRows: 10,
     items: [
-        {id: 'temperature-progress-bar', x: 0, y: 0, w: 1, h: 1, widgetConfig: {
+        {id: 'temperature-progress-bar', x: 0, y: 0, w: 1, h: 5, widgetConfig: {
             kind: 'progress-bar',
             signalId: 'test.temperature', 
             min: -20, 
-            max: -20
+            max: 20
         }},
-        {id: 'all-channel-list', x: 2, y: 1, w: 1, h: 1, widgetConfig: {
+        {id: 'all-channel-list', x: 1, y: 5, w: 1, h: 5, widgetConfig: {
             kind: 'channel-list',
             problemOnly: false
         }}
