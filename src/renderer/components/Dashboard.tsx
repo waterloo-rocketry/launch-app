@@ -13,7 +13,22 @@ import {
  * Dashboard
  *
  * The parent container of all widgets and dashboard-related operations
- * Configs are loaded
+ *
+ * Configs are loaded via `loadWidgetConfig()`. This file currently contains a mock implementation.
+ * This function should load the config from some persistent storage, or create a new config, and return as WidgetConfig[].
+ *
+ * A WidgetConfig is a static config that can be saved and loaded
+ *
+ * Widgets are registered and created in `widgetFactory`. All future widgets shall register themselves here.
+ * `widgetFactory` reads a WidgetConfig and return a WidgetState
+ *
+ * A WidgetState is an in-memory state of the information about the widget, including how it shall be rendered and
+ * what actions is available for the widget
+ *
+ * When user right-click a widget, an action manu pops up, containing universal actions such as `Remove`, `Hide`,
+ * and `Change Type`. Each widget can also self-declare custom actions in WidgetState.
+ *
+ * Currently only `Remove` is implemented
  */
 
 /**
@@ -29,6 +44,9 @@ export interface DashboardProps {
   url: string;
 }
 
+/**
+ * The internal state of a widget, containing informations such as how it is rendered and it's custom actions
+ */
 interface WidgetState {
   // the function to render a widget
   renderer: (
@@ -39,7 +57,7 @@ interface WidgetState {
   availableActions: Readonly<Record<string, (widget?: WidgetConfig) => void>>;
 }
 
-// to be removed
+// a placeholder widget to be removed
 function placeholderWidget(
   channel?: ChannelState,
   componentSpecificSetting?: Object,

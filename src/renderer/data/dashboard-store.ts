@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ComponentType } from '../components/BaseComponent';
 
+/**
+ * The persistent config the the widgets (and layout)
+ */
 export interface WidgetConfig {
   // id of the channel
   channelId: string;
@@ -14,6 +17,11 @@ export interface WidgetConfig {
   componentSpecificSetting?: Object;
 }
 
+/**
+ * Creating a default config of a widget
+ * @param id the id of the channel subscribed
+ * @returns a default widget
+ */
 export function createDefaultWidget(id: string): WidgetConfig {
   return {
     channelId: id,
@@ -41,6 +49,18 @@ export interface DashboardConfig {
   swapWidget: (componentId1: string, componentId2: string) => void;
 }
 
+/**
+ * Creates a dashboard config. 
+ * Call it only once. If multiple accesses are needed, move to parent. 
+ * This function returns functions handling common operations to the dashboard layout
+ * All operations are keyed by component ID since it is already unique and persistent. 
+ * 
+ * If, in the future, we want to split the settings, we can change the id to an UUID generated
+ * based on the config.
+ * 
+ * All operations validates input so catch errors if unsure about it
+ * @returns Dashboard config
+ */
 export function useDashboard(): DashboardConfig {
   const [widgets, setWidgets] = useState<WidgetConfig[]>([]);
 
