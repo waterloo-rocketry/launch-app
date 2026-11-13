@@ -177,7 +177,7 @@ export default function Dashboard({ url }: DashboardProps) {
     if (
       widget &&
       confirm(
-        `Are you sure you want to remove widgt ${widget.componentTitle ?? channels[widget.channelId]?.signal.label ?? 'Unknown Channel'}?`,
+        `Are you sure you want to remove widget ${widget.componentTitle ?? channels[widget.channelId]?.signal.label ?? 'Unknown Channel'}?`,
       )
     ) {
       config.removeWidget(widget.componentId);
@@ -188,9 +188,11 @@ export default function Dashboard({ url }: DashboardProps) {
     <>
       <div className="dashboard-grid">
         {widgetStates.map((widget) => (
-          <div onContextMenu={(e) => handleContextMenu(e, widget)}>
+          <div
+            key={widget.config.componentId}
+            onContextMenu={(e) => handleContextMenu(e, widget)}
+          >
             <BaseComponent
-              key={widget.config.componentId + '_parent'}
               id={widget.config.componentId}
               componentType={widget.config.componentType ?? 'numeric'}
               title={
