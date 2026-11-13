@@ -8,7 +8,6 @@ import { TelemetryMonitor } from './components/TelemetryMonitor';
 const MOCK_TELEMETRY_URL = '/mock-api/events';
 
 export default function App() {
-
   return (
     <div className="app-shell">
       <Header title={APP_NAME} />
@@ -17,7 +16,7 @@ export default function App() {
         {/* Development only until a production telemetry backend exists. */}
         {import.meta.env.DEV && <TelemetryMonitor url={MOCK_TELEMETRY_URL} />}
         <section aria-label="Dashboard">
-          {import.meta.env.DEV && <Dashboard url={MOCK_TELEMETRY_URL}/>}
+          {import.meta.env.DEV && <Dashboard url={MOCK_TELEMETRY_URL} />}
         </section>
       </main>
     </div>
