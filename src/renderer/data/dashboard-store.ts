@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ComponentType } from "../components/BaseComponent";
 
-export interface WidgetSetting {
+export interface WidgetConfig {
     // id of the channel
     channelId: string;
     // component id
@@ -14,7 +14,7 @@ export interface WidgetSetting {
     componentSpecificSetting?: Object
 }
 
-export function createDefaultWidget(id: string): WidgetSetting {
+export function createDefaultWidget(id: string): WidgetConfig {
     return {
         channelId: id,
         componentId: id,
@@ -23,8 +23,8 @@ export function createDefaultWidget(id: string): WidgetSetting {
 }
 
 export interface DashboardConfig {
-    widgets: WidgetSetting[]
-    setWidgets: (widgets: WidgetSetting[]) => void
+    widgets: WidgetConfig[]
+    setWidgets: (widgets: WidgetConfig[]) => void
     /* 
         widget storages are keyed by component ID. 
         passing the whole widget object is unnecessary
@@ -34,27 +34,27 @@ export interface DashboardConfig {
     */
     removeWidget: (componentId: string) => void
     // addWidget checks duplication
-    addWidget: (widget: WidgetSetting) => void
+    addWidget: (widget: WidgetConfig) => void
     // update the widget with ID, reject if ID does not exist
     // in the rare event when you need to change the widget ID, call remove then add
-    updateWidget: (widget: WidgetSetting) => void 
+    updateWidget: (widget: WidgetConfig) => void 
     swapWidget: (componentId1: string, componentId2: string) => void
 }
 
 export function useDashboard(): DashboardConfig {
-    const [widgets, setWidgets] = useState<WidgetSetting[]>([])
+    const [widgets, setWidgets] = useState<WidgetConfig[]>([])
 
     function removeWidget(componentId: string) {
         if (!widgets.find(w => w.componentId == componentId)) throw new Error(`Widget ${componentId} does not exist!`)
         setWidgets(ws => ws.filter(w => w.componentId !== componentId))
     }
 
-    function addWidget(widget: WidgetSetting) {
+    function addWidget(widget: WidgetConfig) {
         if (widgets.find(w => w.componentId == widget.componentId)) throw new Error(`Duplicate widget ID: ${widget.componentId}`)
         setWidgets(ws => [...ws, widget])
     }
 
-    function updateWidget(widget: WidgetSetting) {
+    function updateWidget(widget: WidgetConfig) {
         if (!widgets.find(w => w.componentId == widget.componentId)) throw new Error(`Widget ${widget.componentId} does not exist!`)
         setWidgets(ws => ws.map(w => w.componentId === widget.componentId ? widget : w))
     }
