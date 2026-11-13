@@ -180,7 +180,7 @@ export default function Dashboard({ url }: DashboardProps) {
         `Are you sure you want to remove widgt ${widget.componentTitle ?? channels[widget.channelId]?.signal.label ?? 'Unknown Channel'}?`,
       )
     ) {
-      config.removeWidget(widget.channelId);
+      config.removeWidget(widget.componentId);
     }
   }
 
