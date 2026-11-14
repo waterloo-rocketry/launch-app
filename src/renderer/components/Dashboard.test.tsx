@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import Dashboard from './Dashboard';
+import Dashboard, { WidgetCustomActions } from './Dashboard';
 import * as dashboardStore from '../data/dashboard-store';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import { TestEventSource } from '../test/event-source';
 
 const widget = (label: string) => screen.getByRole('region', { name: label });
+const widgets = () => document.querySelectorAll('[data-widget-id]');
 
 function startDashboard() {
   render(<Dashboard url="/test-api/events" />);
@@ -28,7 +29,7 @@ function freshFrame(value = 42, timestampMs = Date.now()) {
 describe('Dashboard', () => {
   it('shows configured widgets and updates labels and readings as telemetry arrives', () => {
     const events = startDashboard();
-    expect(screen.getAllByRole('region')).toHaveLength(4);
+    expect(widgets()).toHaveLength(4);
     expect(
       screen.getAllByRole('region', { name: 'Unknown Channel' }),
     ).toHaveLength(4);
@@ -83,7 +84,7 @@ describe('Dashboard', () => {
     expect(
       screen.queryByRole('region', { name: 'Test pressure' }),
     ).not.toBeInTheDocument();
-    expect(screen.getAllByRole('region')).toHaveLength(3);
+    expect(widgets()).toHaveLength(3);
     expect(widget('Test temperature')).toBeInTheDocument();
     expect(screen.queryByText('Remove')).not.toBeInTheDocument();
   });
@@ -129,7 +130,7 @@ describe('Dashboard', () => {
     fireEvent.click(screen.getByText('Remove'));
 
     expect(widget('Test pressure')).toBeInTheDocument();
-    expect(screen.getAllByRole('region')).toHaveLength(4);
+    expect(widgets()).toHaveLength(4);
     expect(screen.queryByText('Remove')).not.toBeInTheDocument();
   });
 });

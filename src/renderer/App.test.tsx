@@ -11,9 +11,8 @@ describe('application shell', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(
-      screen
-        .getByRole('region', { name: 'Dashboard' })
-        .querySelectorAll('[data-widget-id]'),
-    ).toHaveLength(4);
+      screen.getByRole('heading', { name: 'Dashboard' }),
+    ).toBeInTheDocument();
+    expect(document.querySelectorAll('[data-widget-id]')).toHaveLength(4);
   });
 });

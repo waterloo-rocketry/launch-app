@@ -93,7 +93,10 @@ function placeholderWidget(
 function widgetFactory(settings: WidgetConfig): WidgetState {
   return {
     renderer: placeholderWidget,
-    availableActions: {},
+    availableActions: {
+      'Custom Action': () =>
+        alert('This is a custom action defined by each individual widget.'),
+    },
   };
 }
 
@@ -185,7 +188,9 @@ export default function Dashboard({ url }: DashboardProps) {
   }
 
   return (
-    <>
+    <section aria-label="Dashboard">
+      <h2>Dashboard</h2>
+      <p>Right-click to manage</p>
       <div className="dashboard-grid">
         {widgetStates.map((widget) => (
           <div
@@ -237,7 +242,7 @@ export default function Dashboard({ url }: DashboardProps) {
             </li>
           </ul>
           {Object.keys(menu.currentWidget?.state?.availableActions ?? {})
-            .length > 1 && (
+            .length > 0 && (
             <>
               <hr />
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
@@ -245,6 +250,7 @@ export default function Dashboard({ url }: DashboardProps) {
                   menu.currentWidget?.state?.availableActions ?? {},
                 ).map((action) => (
                   <li
+                    key={`action-${menu.currentWidget?.config.componentId}-${action[0].replace(' ', '')}`}
                     className="dashboard-popup-item"
                     onClick={() => action[1](menu.currentWidget?.config)}
                   >
@@ -256,6 +262,6 @@ export default function Dashboard({ url }: DashboardProps) {
           )}
         </div>
       )}
-    </>
+    </section>
   );
 }

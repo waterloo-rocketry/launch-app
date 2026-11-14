@@ -50,14 +50,14 @@ export interface DashboardConfig {
 }
 
 /**
- * Creates a dashboard config. 
- * Call it only once. If multiple accesses are needed, move to parent. 
+ * Creates a dashboard config.
+ * Call it only once. If multiple accesses are needed, move to parent.
  * This function returns functions handling common operations to the dashboard layout
- * All operations are keyed by component ID since it is already unique and persistent. 
- * 
+ * All operations are keyed by component ID since it is already unique and persistent.
+ *
  * If, in the future, we want to split the settings, we can change the id to an UUID generated
  * based on the config.
- * 
+ *
  * All operations validates input so catch errors if unsure about it
  * @returns Dashboard config
  */
