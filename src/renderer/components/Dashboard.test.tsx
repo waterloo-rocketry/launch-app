@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import Dashboard, { WidgetCustomActions } from './Dashboard';
+import Dashboard from './Dashboard';
 import * as dashboardStore from '../data/dashboard-store';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import { TestEventSource } from '../test/event-source';

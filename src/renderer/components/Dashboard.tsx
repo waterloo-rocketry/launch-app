@@ -59,8 +59,7 @@ interface WidgetState {
 
 // a placeholder widget to be removed
 function placeholderWidget(
-  channel?: ChannelState,
-  componentSpecificSetting?: Object,
+  channel?: ChannelState
 ) {
   return channel
     ? '(Placeholder Widget)' + getLatestReading(channel)?.value
