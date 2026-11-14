@@ -51,16 +51,14 @@ interface WidgetState {
   // the function to render a widget
   renderer: (
     channel?: ChannelState,
-    componentSpecificSetting?: Object,
+    componentSpecificSetting?: object,
   ) => ReactNode;
   // all available actions the widget can have and the corresponding handler, excluding delete, hide, and change type
   availableActions: Readonly<Record<string, (widget?: WidgetConfig) => void>>;
 }
 
 // a placeholder widget to be removed
-function placeholderWidget(
-  channel?: ChannelState
-) {
+function placeholderWidget(channel?: ChannelState) {
   return channel
     ? '(Placeholder Widget)' + getLatestReading(channel)?.value
     : 'No Value';
@@ -90,13 +88,16 @@ function placeholderWidget(
  * @param settings The widget config
  */
 function widgetFactory(settings: WidgetConfig): WidgetState {
-  return {
-    renderer: placeholderWidget,
-    availableActions: {
-      'Custom Action': () =>
-        alert('This is a custom action defined by each individual widget.'),
-    },
-  };
+  switch (settings.componentType) {
+    default:
+      return {
+        renderer: placeholderWidget,
+        availableActions: {
+          'Custom Action': () =>
+            alert('This is a custom action defined by each individual widget.'),
+        },
+      };
+  }
 }
 
 interface internalWidgetState {

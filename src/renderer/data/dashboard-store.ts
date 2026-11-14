@@ -14,7 +14,7 @@ export interface WidgetConfig {
   // title, default to the label of the channel
   componentTitle?: string;
   // component specific configs for the channel, i.e, the zero points for graphs
-  componentSpecificSetting?: Object;
+  componentSpecificSetting?: object;
 }
 
 /**
