@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, ReactNode } from 'react';
+import { useEffect, useMemo, useState, useRef, ReactNode } from 'react';
 import BaseComponent from './BaseComponent';
 import { TelemetryState } from '../data/channel-store';
 import { getLatestReading, ChannelState } from '../data/channel-store';
@@ -8,6 +8,7 @@ import {
   createDefaultWidget,
   WidgetConfig,
 } from '../data/dashboard-store';
+import { useWidgetStates } from './useWidgetStates';
 
 /**
  * Dashboard
@@ -128,7 +129,8 @@ function loadWidgetConfig(): WidgetConfig[] {
 
 export default function Dashboard({ state, nowMs }: DashboardProps) {
   const channels = state?.channels ?? {};
-  const config = useDashboard(loadWidgetConfig());
+  const initialWidgets = useMemo(() => loadWidgetConfig(), []);
+  const config = useDashboard(initialWidgets);
 
   const [menu, setMenu] = useState<MenuPosition>({
     visible: false,
@@ -167,9 +169,8 @@ export default function Dashboard({ state, nowMs }: DashboardProps) {
     };
   }, [menu.visible]);
 
-  const widgetStates = config.widgets.map<internalWidgetState>((widget) => {
-    return { config: widget, state: widgetFactory(widget) };
-  });
+  // The store replaces widgets on config edits, so telemetry renders reuse factory results.
+  const widgetStates = useWidgetStates(config.widgets, widgetFactory);
 
   function removeWidget(widget?: WidgetConfig) {
     setMenu({ visible: false, x: 0, y: 0, currentWidget: undefined });
