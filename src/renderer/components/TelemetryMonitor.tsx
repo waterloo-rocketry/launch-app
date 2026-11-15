@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { EMPTY_FILTER, filterChannels } from '../data/channel-filter';
-import { useTelemetry } from '../data/useTelemetry';
+import { TelemetryState } from '../data/channel-store';
 import { ChannelFilters } from './ChannelFilters';
 import { ChannelList } from './ChannelList';
 import { ProgressBar } from './ProgressBar';
 
 interface TelemetryMonitorProps {
-  /** Telemetry event stream URL. */
-  url: string;
+  state: TelemetryState | null;
+  /** Pass to `getChannelStatus` to judge staleness. */
+  nowMs: number;
 }
 
-export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
-  const { state, nowMs } = useTelemetry({ url });
+export function TelemetryMonitor({ state, nowMs }: TelemetryMonitorProps) {
   const [filter, setFilter] = useState(EMPTY_FILTER);
 
   const content = () => {
