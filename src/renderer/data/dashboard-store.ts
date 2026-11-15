@@ -61,8 +61,8 @@ export interface DashboardConfig {
  * All operations validates input so catch errors if unsure about it
  * @returns Dashboard config
  */
-export function useDashboard(): DashboardConfig {
-  const [widgets, setWidgets] = useState<WidgetConfig[]>([]);
+export function useDashboard(defaultConfig: WidgetConfig[] = []): DashboardConfig {
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(defaultConfig);
 
   function removeWidget(componentId: string) {
     if (!widgets.find((w) => w.componentId == componentId))

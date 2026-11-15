@@ -115,7 +115,7 @@ interface MenuPosition {
 
 /**
  * This function loads the widget config from some persistent storage and create the widget configs
- * To be inplemented in the future
+ * To be changed in the future
  */
 function loadWidgetConfig(): WidgetConfig[] {
   return [
@@ -128,11 +128,7 @@ function loadWidgetConfig(): WidgetConfig[] {
 
 export default function Dashboard({ state, nowMs }: DashboardProps) {
   const channels = state?.channels ?? {};
-  const config = useDashboard();
-
-  // default data, replace when config storage is implemented
-  // this should be read from a saved config file in the future
-  useEffect(() => config.setWidgets(loadWidgetConfig()), []);
+  const config = useDashboard(loadWidgetConfig());
 
   const [menu, setMenu] = useState<MenuPosition>({
     visible: false,
