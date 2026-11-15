@@ -222,9 +222,10 @@ h2 {
 .dashboard-preview {
   z-index: 3;
   box-sizing: border-box;
-  border: 2px dashed #2f6fed;
+  /* 1px dashed: thinner, and the browser draws shorter, more frequent dashes. */
+  border: 1px dashed rgb(47 111 237 / 55%);
   border-radius: 6px;
-  background: rgb(47 111 237 / 8%);
+  background: rgb(47 111 237 / 4%);
   pointer-events: none;
 }
 /* Widgets can be picked up anywhere that isn't a button, input or handle. */
@@ -250,11 +251,11 @@ h2 {
 /* Where widgets in the way will be pushed to. */
 .dashboard-preview--pushed {
   border-style: dotted;
-  border-color: #7a9ff0;
-  background: rgb(47 111 237 / 4%);
+  border-color: rgb(47 111 237 / 40%);
+  background: rgb(47 111 237 / 2%);
 }
 /* The drop spot can't be used: releasing here puts the widget back. */
 .dashboard-preview--invalid {
-  border-color: #c23b3b;
-  background: rgb(194 59 59 / 8%);
+  border-color: rgb(194 59 59 / 55%);
+  background: rgb(194 59 59 / 4%);
 }

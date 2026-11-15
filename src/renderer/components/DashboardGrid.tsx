@@ -9,7 +9,7 @@ import {
   type widgetConfig,
 } from '../Layout';
 import { ProgressBar } from './ProgressBar';
-import { ChannelList } from './ChannelList';
+import { FilteredChannelList } from './FilteredChannelList';
 import type { TelemetryState } from '../data/channel-store';
 
 interface dashboardGridProps {
@@ -80,8 +80,14 @@ function renderWidget(
 ) {
   switch (config.kind) {
     case 'channel-list': {
-      const channelList = Object.values(telemetryState.channels);
-      return <ChannelList channels={channelList} nowMs={nowMs} />;
+      return (
+        <FilteredChannelList
+          channels={Object.values(telemetryState.channels)}
+          nowMs={nowMs}
+          problemsOnly={config.problemOnly}
+          hidden={config.hidden}
+        />
+      );
     }
     case 'progress-bar': {
       const { signalId, min, max } = config;
