@@ -1,13 +1,21 @@
 import { useTelemetry } from '../data/useTelemetry';
 import { DashboardGrid } from './DashboardGrid';
-import { DEFAULT_LAYOUT } from '../Layout';
+import { DEFAULT_LAYOUT, type dashboardLayout } from '../Layout';
 
 interface TelemetryMonitorProps {
   /** Telemetry event stream URL. */
   url: string;
+  /**
+   * Dashboard layout to show. Pass the same object on every render: a
+   * different object makes the grid start over from it.
+   */
+  layout?: dashboardLayout;
 }
 
-export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
+export function TelemetryMonitor({
+  url,
+  layout = DEFAULT_LAYOUT,
+}: TelemetryMonitorProps) {
   const { state, nowMs } = useTelemetry({ url });
 
   const content = () => {
@@ -16,11 +24,7 @@ export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
       return <p>No channels configured</p>;
     }
     return (
-      <DashboardGrid
-        layout={DEFAULT_LAYOUT}
-        telemetryState={state}
-        nowMs={nowMs}
-      />
+      <DashboardGrid layout={layout} telemetryState={state} nowMs={nowMs} />
     );
   };
 
