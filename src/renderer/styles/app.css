@@ -173,14 +173,38 @@ h2 {
   overflow: auto;
   padding: 0.75rem;
 }
+/* While dragging, the widget floats above its neighbours. */
+.dashboard-cell--resizing {
+  z-index: 2;
+  box-shadow: 0 4px 16px rgb(32 36 42 / 18%);
+}
 .dashboard-cell__resize {
   position: absolute;
+  touch-action: none; /* stop touch screens from scrolling while dragging */
+}
+/* Right edge: width only. */
+.dashboard-cell__resize--x {
+  top: 0;
+  right: 0;
+  bottom: 14px;
+  width: 8px;
+  cursor: ew-resize;
+}
+/* Bottom edge: height only. */
+.dashboard-cell__resize--y {
+  left: 0;
+  right: 14px;
+  bottom: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+/* Corner: both. */
+.dashboard-cell__resize--xy {
   right: 0;
   bottom: 0;
   width: 14px;
   height: 14px;
   cursor: nwse-resize;
-  touch-action: none; /* stop touch screens from scrolling while dragging */
   /* Two faint diagonal lines in the corner. */
   background: linear-gradient(
     135deg,
@@ -193,4 +217,13 @@ h2 {
     #c9ced6 80%,
     transparent 80%
   );
+}
+/* Blue outline of the size the widget snaps to when the pointer is released. */
+.dashboard-preview {
+  z-index: 3;
+  box-sizing: border-box;
+  border: 2px dashed #2f6fed;
+  border-radius: 6px;
+  background: rgb(47 111 237 / 8%);
+  pointer-events: none;
 }

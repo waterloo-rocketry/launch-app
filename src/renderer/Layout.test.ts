@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  closestValidSize,
   fitsInGrid,
+  growthLimits,
   overlaps,
   resizeItem,
   type dashboardLayout,
@@ -85,5 +87,46 @@ describe('resizeItem', () => {
   ])('returns the same layout for %s', (_label, id, w, h) => {
     const layout = makeLayout();
     expect(resizeItem(layout, id, w, h)).toBe(layout);
+  });
+});
+
+describe('closestValidSize', () => {
+  it('returns the requested size when it fits', () => {
+    expect(closestValidSize(makeLayout(), 'a', 2, 3)).toEqual({ w: 2, h: 3 });
+  });
+
+  it('stops just before a neighbouring widget', () => {
+    // 'b' starts at column 2, so 'a' can be at most 2 wide.
+    expect(closestValidSize(makeLayout(), 'a', 4, 1)).toEqual({ w: 2, h: 1 });
+  });
+
+  it('stops at the grid edges', () => {
+    expect(closestValidSize(makeLayout(), 'a', 1, 9)).toEqual({ w: 1, h: 4 });
+    expect(closestValidSize(makeLayout(), 'a', 0, 0)).toEqual({ w: 1, h: 1 });
+  });
+
+  it('still grows in the direction that is free', () => {
+    // Too wide (would hit 'b'), but the extra height is fine.
+    expect(closestValidSize(makeLayout(), 'a', 4, 3)).toEqual({ w: 2, h: 3 });
+  });
+
+  it('returns null for an unknown id', () => {
+    expect(closestValidSize(makeLayout(), 'zzz', 1, 1)).toBeNull();
+  });
+});
+
+describe('growthLimits', () => {
+  it('finds how far a widget can grow in each direction alone', () => {
+    // 'a' at (0,0): 'b' at column 2 blocks width; nothing blocks height.
+    expect(growthLimits(makeLayout(), 'a', 1, 1)).toEqual({ maxW: 2, maxH: 4 });
+  });
+
+  it('limits width by the rows the widget covers', () => {
+    // 'b' stops at the right edge; taller doesn't change that.
+    expect(growthLimits(makeLayout(), 'b', 1, 3)).toEqual({ maxW: 2, maxH: 4 });
+  });
+
+  it('returns null for an unknown id', () => {
+    expect(growthLimits(makeLayout(), 'zzz', 1, 1)).toBeNull();
   });
 });

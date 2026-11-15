@@ -1,5 +1,12 @@
 import { useRef, useState, type PointerEvent } from 'react';
-import { resizeItem, type dashboardLayout, type widgetConfig } from '../Layout';
+import {
+  closestValidSize,
+  growthLimits,
+  resizeItem,
+  type dashboardLayout,
+  type gridItem,
+  type widgetConfig,
+} from '../Layout';
 import { ProgressBar } from './ProgressBar';
 import { ChannelList } from './ChannelList';
 import type { TelemetryState } from '../data/channel-store';
@@ -12,17 +19,37 @@ interface dashboardGridProps {
   onLayoutChange?: (layout: dashboardLayout) => void;
 }
 
-/** What we remember while a resize drag is in progress. */
+/** Which edge is being dragged: right edge, bottom edge, or the corner. */
+type ResizeAxis = 'x' | 'y' | 'xy';
+
+const HANDLES: { axis: ResizeAxis; label: string }[] = [
+  { axis: 'x', label: 'Drag to resize width' },
+  { axis: 'y', label: 'Drag to resize height' },
+  { axis: 'xy', label: 'Drag to resize' },
+];
+
+/** Everything measured when a drag starts, plus how far the pointer has moved. */
 interface ResizeDrag {
   id: string;
+  axis: ResizeAxis;
   startX: number;
   startY: number;
   startW: number;
   startH: number;
-  /** Pixels between the start of one column/row and the start of the next. */
+  /** The widget's pixel size when the drag started. */
+  startWidthPx: number;
+  startHeightPx: number;
+  /** Gap between cells, and the step from one column/row to the next. */
+  colGap: number;
+  rowGap: number;
   colStep: number;
   rowStep: number;
+  dx: number;
+  dy: number;
 }
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
 
 function renderWidget(
   config: widgetConfig,
@@ -45,6 +72,12 @@ function renderWidget(
   }
 }
 
+/** CSS grid placement for an item: "start / span size", 1-based lines. */
+const placement = (item: Pick<gridItem, 'x' | 'y' | 'w' | 'h'>) => ({
+  gridColumn: `${item.x + 1} / span ${item.w}`,
+  gridRow: `${item.y + 1} / span ${item.h}`,
+});
+
 export function DashboardGrid({
   layout: initialLayout,
   telemetryState,
@@ -52,55 +85,119 @@ export function DashboardGrid({
   onLayoutChange,
 }: dashboardGridProps) {
   const [layout, setLayout] = useState(initialLayout);
+  // State, not a ref: the dragged widget and the preview redraw on every move.
+  const [drag, setDrag] = useState<ResizeDrag | null>(null);
+
+  // When the parent passes a different layout (a loaded file, or an edit to
+  // DEFAULT_LAYOUT during development), start over from it. Resizes made since
+  // are dropped. React's recommended way to reset state when a prop changes:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [seenLayout, setSeenLayout] = useState(initialLayout);
+  if (initialLayout !== seenLayout) {
+    setSeenLayout(initialLayout);
+    setLayout(initialLayout);
+    setDrag(null);
+  }
   const gridRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<ResizeDrag | null>(null);
   const { numberOfCols, numberOfRows, items } = layout;
+
+  /** The snapped size the widget will take if the pointer is released now. */
+  const previewSize = (current: ResizeDrag) => {
+    // Math.round: past half a cell, the size moves to the next cell.
+    const w =
+      current.axis === 'y'
+        ? current.startW
+        : current.startW + Math.round(current.dx / current.colStep);
+    const h =
+      current.axis === 'x'
+        ? current.startH
+        : current.startH + Math.round(current.dy / current.rowStep);
+    return closestValidSize(layout, current.id, w, h);
+  };
 
   const startResize = (
     event: PointerEvent<HTMLDivElement>,
-    id: string,
-    w: number,
-    h: number,
+    item: gridItem,
+    axis: ResizeAxis,
   ) => {
     const grid = gridRef.current;
-    if (!grid) return;
+    const cell = event.currentTarget.parentElement;
+    if (!grid || !cell) return;
     event.preventDefault(); // don't select text while dragging
     event.currentTarget.setPointerCapture(event.pointerId);
 
     // Cells are 1fr, so measure their real pixel size right now.
-    const rect = grid.getBoundingClientRect();
+    const gridRect = grid.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
     const style = getComputedStyle(grid);
     const colGap = parseFloat(style.columnGap) || 0;
     const rowGap = parseFloat(style.rowGap) || 0;
+    const colStep = (gridRect.width + colGap) / numberOfCols;
+    const rowStep = (gridRect.height + rowGap) / numberOfRows;
 
-    dragRef.current = {
-      id,
+    setDrag({
+      id: item.id,
+      axis,
       startX: event.clientX,
       startY: event.clientY,
-      startW: w,
-      startH: h,
-      colStep: (rect.width + colGap) / numberOfCols,
-      rowStep: (rect.height + rowGap) / numberOfRows,
-    };
+      startW: item.w,
+      startH: item.h,
+      startWidthPx: cellRect.width,
+      startHeightPx: cellRect.height,
+      colGap,
+      rowGap,
+      colStep,
+      rowStep,
+      dx: 0,
+      dy: 0,
+    });
   };
 
   const moveResize = (event: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
     if (!drag || drag.colStep <= 0 || drag.rowStep <= 0) return;
-    // Math.round snaps the size to whole cells.
-    const w =
-      drag.startW + Math.round((event.clientX - drag.startX) / drag.colStep);
-    const h =
-      drag.startH + Math.round((event.clientY - drag.startY) / drag.rowStep);
-    // resizeItem returns the same layout when the new size isn't allowed,
-    // so React skips the redraw and the widget stays where it was.
-    setLayout((current) => resizeItem(current, drag.id, w, h));
+    setDrag({
+      ...drag,
+      dx: drag.axis === 'y' ? 0 : event.clientX - drag.startX,
+      dy: drag.axis === 'x' ? 0 : event.clientY - drag.startY,
+    });
   };
 
   const endResize = () => {
-    if (!dragRef.current) return;
-    dragRef.current = null;
-    onLayoutChange?.(layout);
+    if (!drag) return;
+    const size = previewSize(drag);
+    setDrag(null);
+    if (!size) return;
+    const next = resizeItem(layout, drag.id, size.w, size.h);
+    if (next === layout) return; // nothing changed
+    setLayout(next);
+    onLayoutChange?.(next);
+  };
+
+  const preview = drag ? previewSize(drag) : null;
+  const dragged = drag ? items.find((item) => item.id === drag.id) : undefined;
+
+  /**
+   * Pixel size of the widget being dragged. Its edge follows the pointer, but
+   * never below one cell and never into a neighbour or past the grid: it stops
+   * at the furthest size that fits next to the previewed size.
+   */
+  const liveSize = () => {
+    if (!drag || !preview) return undefined;
+    const limits = growthLimits(layout, drag.id, preview.w, preview.h);
+    if (!limits) return undefined;
+    const px = (cells: number, step: number, gap: number) => cells * step - gap;
+    return {
+      width: clamp(
+        drag.startWidthPx + drag.dx,
+        px(1, drag.colStep, drag.colGap),
+        px(limits.maxW, drag.colStep, drag.colGap),
+      ),
+      height: clamp(
+        drag.startHeightPx + drag.dy,
+        px(1, drag.rowStep, drag.rowGap),
+        px(limits.maxH, drag.rowStep, drag.rowGap),
+      ),
+    };
   };
 
   return (
@@ -108,35 +205,46 @@ export function DashboardGrid({
       ref={gridRef}
       className="dashboard-grid"
       style={{
-        gridTemplateColumns: `repeat(${numberOfCols}, 1fr)`,
-        gridTemplateRows: `repeat(${numberOfRows}, 1fr)`,
+        // minmax(0, 1fr), not plain 1fr: every column and row keeps exactly the
+        // same size no matter what is inside (plain 1fr grows to fit content).
+        gridTemplateColumns: `repeat(${numberOfCols}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${numberOfRows}, minmax(0, 1fr))`,
       }}
     >
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="dashboard-cell"
-          style={{
-            gridColumn: `${item.x + 1} / span ${item.w}`,
-            gridRow: `${item.y + 1} / span ${item.h}`,
-          }}
-        >
-          <div className="dashboard-cell__content">
-            {renderWidget(item.widgetConfig, telemetryState, nowMs)}
-          </div>
+      {items.map((item) => {
+        const resizing = drag?.id === item.id;
+        return (
           <div
-            className="dashboard-cell__resize"
-            data-testid={`resize-${item.id}`}
-            title="Drag to resize"
-            onPointerDown={(event) =>
-              startResize(event, item.id, item.w, item.h)
-            }
-            onPointerMove={moveResize}
-            onPointerUp={endResize}
-            onPointerCancel={endResize}
-          />
-        </div>
-      ))}
+            key={item.id}
+            className={`dashboard-cell${resizing ? ' dashboard-cell--resizing' : ''}`}
+            style={{ ...placement(item), ...(resizing ? liveSize() : {}) }}
+          >
+            <div className="dashboard-cell__content">
+              {renderWidget(item.widgetConfig, telemetryState, nowMs)}
+            </div>
+            {HANDLES.map(({ axis, label }) => (
+              <div
+                key={axis}
+                className={`dashboard-cell__resize dashboard-cell__resize--${axis}`}
+                data-testid={`resize-${axis}-${item.id}`}
+                title={label}
+                onPointerDown={(event) => startResize(event, item, axis)}
+                onPointerMove={moveResize}
+                onPointerUp={endResize}
+                onPointerCancel={() => setDrag(null)}
+              />
+            ))}
+          </div>
+        );
+      })}
+      {dragged && preview && (
+        <div
+          className="dashboard-preview"
+          data-testid="resize-preview"
+          aria-hidden="true"
+          style={placement({ ...dragged, ...preview })}
+        />
+      )}
     </div>
   );
 }

@@ -26,7 +26,7 @@ export interface dashboardLayout {
 
 export const DEFAULT_LAYOUT: dashboardLayout = {
   version: 1,
-  numberOfCols: 2,
+  numberOfCols: 10,
   numberOfRows: 10,
   items: [
     {
@@ -79,6 +79,73 @@ export function fitsInGrid(area: CellArea, layout: dashboardLayout): boolean {
     area.x + area.w <= layout.numberOfCols &&
     area.y + area.h <= layout.numberOfRows
   );
+}
+
+/**
+ * The allowed size closest to the requested w × h for one widget, searching
+ * only between its current size and the request. A widget dragged into a
+ * neighbour or past the edge stops at the last size that fits, and each
+ * direction is checked on its own, so it can still grow sideways when growing
+ * down is blocked. Returns null for an unknown id.
+ */
+export function closestValidSize(
+  layout: dashboardLayout,
+  id: string,
+  w: number,
+  h: number,
+): { w: number; h: number } | null {
+  const target = layout.items.find((item) => item.id === id);
+  if (!target) return null;
+  const allowed = (cw: number, ch: number) => sizeFits(layout, target, cw, ch);
+
+  let best = { w: target.w, h: target.h };
+  let bestDistance = Math.abs(w - target.w) + Math.abs(h - target.h);
+  for (let cw = Math.min(w, target.w); cw <= Math.max(w, target.w); cw++) {
+    for (let ch = Math.min(h, target.h); ch <= Math.max(h, target.h); ch++) {
+      const distance = Math.abs(w - cw) + Math.abs(h - ch);
+      if (distance < bestDistance && allowed(cw, ch)) {
+        best = { w: cw, h: ch };
+        bestDistance = distance;
+      }
+    }
+  }
+  return best;
+}
+
+/** True when the widget, resized to w × h, stays in the grid and overlaps nothing. */
+function sizeFits(
+  layout: dashboardLayout,
+  target: gridItem,
+  w: number,
+  h: number,
+): boolean {
+  const area = { ...target, w, h };
+  return (
+    fitsInGrid(area, layout) &&
+    !layout.items.some(
+      (other) => other.id !== target.id && overlaps(area, other),
+    )
+  );
+}
+
+/**
+ * How far a widget of size w × h (which must fit) can grow in each direction
+ * alone: the widest it can be at height h, and the tallest at width w.
+ * Returns null for an unknown id.
+ */
+export function growthLimits(
+  layout: dashboardLayout,
+  id: string,
+  w: number,
+  h: number,
+): { maxW: number; maxH: number } | null {
+  const target = layout.items.find((item) => item.id === id);
+  if (!target) return null;
+  let maxW = w;
+  while (sizeFits(layout, target, maxW + 1, h)) maxW++;
+  let maxH = h;
+  while (sizeFits(layout, target, w, maxH + 1)) maxH++;
+  return { maxW, maxH };
 }
 
 /**
