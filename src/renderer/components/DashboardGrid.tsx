@@ -2,6 +2,7 @@ import type { dashboardLayout, widgetConfig } from "../Layout";
 import { ProgressBar } from "./ProgressBar";
 import { ChannelList } from "./ChannelList";
 import type { TelemetryState } from "../data/channel-store";
+import { useState } from "react";
 
 interface dashboardGridProps {
     layout: dashboardLayout;
@@ -29,8 +30,9 @@ export function renderWidget(config: widgetConfig, {telemetryState, nowMs}: dash
 
 }
 
-export function DashboardGrid ({layout, telemetryState, nowMs}: dashboardGridProps) {
-    
+export function DashboardGrid ({layout: initialLayout, telemetryState, nowMs}: dashboardGridProps) {
+
+    const [layout, setLayout] = useState(initialLayout);
     const {numberOfCols, numberOfRows, items} = layout;
 
 

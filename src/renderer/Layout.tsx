@@ -35,9 +35,10 @@ export const DEFAULT_LAYOUT: dashboardLayout = {
             min: -20, 
             max: 20
         }},
-        {id: 'all-channel-list', x: 1, y: 5, w: 1, h: 5, widgetConfig: {
+        {id: 'all-channel-list', x: 1, y: 4, w: 1, h: 5, widgetConfig: {
             kind: 'channel-list',
             problemOnly: false
         }}
     ]
 }
+
