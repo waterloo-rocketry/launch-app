@@ -26,15 +26,15 @@ export interface dashboardLayout {
 
 export const DEFAULT_LAYOUT: dashboardLayout = {
   version: 1,
-  numberOfCols: 20,
-  numberOfRows: 10,
+  numberOfCols: 40,
+  numberOfRows: 20,
   items: [
     {
       id: 'temperature-progress-bar',
       x: 0,
       y: 0,
-      w: 1,
-      h: 5,
+      w: 16,
+      h: 10,
       widgetConfig: {
         kind: 'progress-bar',
         signalId: 'test.temperature',
@@ -44,10 +44,21 @@ export const DEFAULT_LAYOUT: dashboardLayout = {
     },
     {
       id: 'all-channel-list',
-      x: 1,
-      y: 4,
-      w: 1,
-      h: 5,
+      x: 20,
+      y: 8,
+      w: 8,
+      h: 10,
+      widgetConfig: {
+        kind: 'channel-list',
+        problemOnly: false,
+      },
+    },
+    {
+      id: 'all-channel-list-2',
+      x: 30,
+      y: 8,
+      w: 10,
+      h: 10,
       widgetConfig: {
         kind: 'channel-list',
         problemOnly: false,
