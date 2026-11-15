@@ -26,7 +26,7 @@ export interface dashboardLayout {
 
 export const DEFAULT_LAYOUT: dashboardLayout = {
   version: 1,
-  numberOfCols: 10,
+  numberOfCols: 20,
   numberOfRows: 10,
   items: [
     {
@@ -175,4 +175,50 @@ export function resizeItem(
     ...layout,
     items: layout.items.map((item) => (item.id === id ? resized : item)),
   };
+}
+
+/**
+ * Moves one widget so its top-left corner is at (x, y).
+ *
+ * Widgets it would land on are pushed just out of its way, trying right, then
+ * down, then up, then left; each pushed widget must fit in the grid and not
+ * overlap anything else. Returns:
+ * - the same layout when the widget is already there,
+ * - a new layout when the move works,
+ * - null when it can't be done (unknown id, outside the grid, or a widget in
+ *   the way has nowhere to go), so the caller can put the widget back.
+ */
+export function moveItem(
+  layout: dashboardLayout,
+  id: string,
+  x: number,
+  y: number,
+): dashboardLayout | null {
+  const target = layout.items.find((item) => item.id === id);
+  if (!target) return null;
+  if (target.x === x && target.y === y) return layout;
+
+  const moved = { ...target, x, y };
+  if (!fitsInGrid(moved, layout)) return null;
+
+  let placed = layout.items.map((item) => (item.id === id ? moved : item));
+  for (const other of layout.items) {
+    if (other.id === id || !overlaps(moved, other)) continue;
+    const candidates = [
+      { ...other, x: moved.x + moved.w }, // right of the moved widget
+      { ...other, y: moved.y + moved.h }, // below it
+      { ...other, y: moved.y - other.h }, // above it
+      { ...other, x: moved.x - other.w }, // left of it
+    ];
+    const spot = candidates.find(
+      (candidate) =>
+        fitsInGrid(candidate, layout) &&
+        !placed.some(
+          (item) => item.id !== other.id && overlaps(candidate, item),
+        ),
+    );
+    if (!spot) return null;
+    placed = placed.map((item) => (item.id === other.id ? spot : item));
+  }
+  return { ...layout, items: placed };
 }

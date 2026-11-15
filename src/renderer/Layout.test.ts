@@ -3,6 +3,7 @@ import {
   closestValidSize,
   fitsInGrid,
   growthLimits,
+  moveItem,
   overlaps,
   resizeItem,
   type dashboardLayout,
@@ -128,5 +129,94 @@ describe('growthLimits', () => {
 
   it('returns null for an unknown id', () => {
     expect(growthLimits(makeLayout(), 'zzz', 1, 1)).toBeNull();
+  });
+});
+
+describe('moveItem', () => {
+  /** A grid of 1×1 widgets, named by their ids, at the given cells. */
+  function grid(cols: number, rows: number, cells: [string, number, number][]) {
+    return {
+      version: 1,
+      numberOfCols: cols,
+      numberOfRows: rows,
+      items: cells.map(([id, x, y]) => ({
+        id,
+        ...area(x, y, 1, 1),
+        widgetConfig: { kind: 'channel-list' as const, problemOnly: false },
+      })),
+    };
+  }
+  const where = (layout: dashboardLayout | null, id: string) => {
+    const item = layout?.items.find((candidate) => candidate.id === id);
+    return item && [item.x, item.y];
+  };
+
+  it('moves a widget into empty cells', () => {
+    const layout = makeLayout();
+    const next = moveItem(layout, 'a', 1, 1);
+    expect(where(next, 'a')).toEqual([1, 1]);
+    expect(next?.items[1]).toBe(layout.items[1]);
+    expect(where(layout, 'a')).toEqual([0, 0]); // original untouched
+  });
+
+  it('returns the same layout when the widget does not move', () => {
+    const layout = makeLayout();
+    expect(moveItem(layout, 'a', 0, 0)).toBe(layout);
+  });
+
+  it('returns null outside the grid or for an unknown id', () => {
+    expect(moveItem(makeLayout(), 'a', 4, 0)).toBeNull();
+    expect(moveItem(makeLayout(), 'a', 0, -1)).toBeNull();
+    expect(moveItem(makeLayout(), 'zzz', 1, 1)).toBeNull();
+  });
+
+  it('pushes a widget in the way to the right first', () => {
+    const next = moveItem(makeLayout(), 'a', 2, 0);
+    expect(where(next, 'a')).toEqual([2, 0]);
+    expect(where(next, 'b')).toEqual([3, 0]);
+  });
+
+  it('pushes down when the right is blocked', () => {
+    const layout = grid(4, 4, [
+      ['a', 0, 0],
+      ['b', 3, 0],
+    ]);
+    expect(where(moveItem(layout, 'a', 3, 0), 'b')).toEqual([3, 1]);
+  });
+
+  it('pushes up, then left, when right and down are blocked', () => {
+    const up = grid(2, 2, [
+      ['a', 0, 0],
+      ['b', 1, 1],
+    ]);
+    expect(where(moveItem(up, 'a', 1, 1), 'b')).toEqual([1, 0]);
+
+    const left = grid(2, 1, [
+      ['a', 0, 0],
+      ['b', 1, 0],
+    ]);
+    expect(where(moveItem(left, 'a', 1, 0), 'b')).toEqual([0, 0]);
+  });
+
+  it('pushes a wide widget clear of a partial overlap', () => {
+    const layout: dashboardLayout = {
+      ...makeLayout(),
+      items: [
+        { ...makeLayout().items[0], ...area(0, 0, 2, 1) },
+        { ...makeLayout().items[1], ...area(2, 1, 1, 1) },
+      ],
+    };
+    // 'a' (2 wide) dropped at (1, 1) covers 'b' at (2, 1): 'b' goes right.
+    expect(where(moveItem(layout, 'a', 1, 1), 'b')).toEqual([3, 1]);
+  });
+
+  it('returns null when a widget in the way has nowhere to go', () => {
+    const full = grid(2, 2, [
+      ['a', 0, 0],
+      ['b', 1, 0],
+      ['c', 0, 1],
+      ['d', 1, 1],
+    ]);
+    expect(moveItem(full, 'a', 1, 1)).toBeNull();
   });
 });

@@ -237,4 +237,137 @@ describe('DashboardGrid', () => {
     expect(cellOf('bar')).toHaveStyle({ gridColumn: '1 / span 1' });
     expect(onLayoutChange).not.toHaveBeenCalled();
   });
+
+  describe('moving', () => {
+    const widget = (id: string) => screen.getByTestId(`widget-${id}`);
+    const movePreview = () => screen.queryByTestId('move-preview');
+
+    /** Presses on a widget at (0, 0) and moves the pointer to (x, y). */
+    function moveTo(id: string, x: number, y: number) {
+      fireEvent.pointerDown(widget(id), {
+        clientX: 0,
+        clientY: 0,
+        pointerId: 1,
+        button: 0,
+      });
+      fireEvent.pointerMove(widget(id), { clientX: x, clientY: y });
+    }
+
+    it('treats a press that barely moves as a click, not a move', () => {
+      const onLayoutChange = vi.fn();
+      renderGrid(LAYOUT, onLayoutChange);
+      moveTo('bar', 2, 1);
+      expect(movePreview()).not.toBeInTheDocument();
+      expect(widget('bar')).not.toHaveClass('dashboard-cell--moving');
+      fireEvent.pointerUp(widget('bar'));
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('follows the pointer, snaps to cells, and moves on release', () => {
+      const onLayoutChange = vi.fn();
+      renderGrid(LAYOUT, onLayoutChange);
+      moveTo('bar', 70, 130); // 0.7 columns → 1, 1.3 rows → 1
+      expect(widget('bar')).toHaveClass('dashboard-cell--moving');
+      expect(widget('bar')).toHaveStyle({
+        transform: 'translate(70px, 130px)',
+      });
+      expect(movePreview()).toHaveStyle({
+        gridColumn: '2 / span 1',
+        gridRow: '2 / span 1',
+      });
+
+      fireEvent.pointerUp(widget('bar'));
+      expect(movePreview()).not.toBeInTheDocument();
+      expect(widget('bar')).toHaveStyle({
+        gridColumn: '2 / span 1',
+        gridRow: '2 / span 1',
+      });
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutChange.mock.calls[0][0].items[0]).toMatchObject({
+        x: 1,
+        y: 1,
+      });
+    });
+
+    it('keeps the drop spot inside the grid', () => {
+      renderGrid();
+      moveTo('bar', -300, 900);
+      expect(movePreview()).toHaveStyle({
+        gridColumn: '1 / span 1',
+        gridRow: '4 / span 1',
+      });
+    });
+
+    it('pushes a widget in the way to the right and shows where it goes', () => {
+      renderGrid();
+      moveTo('bar', 200, 0); // onto the channel list at column 3
+      expect(screen.getByTestId('push-preview-list')).toHaveStyle({
+        gridColumn: '4 / span 1',
+      });
+      fireEvent.pointerUp(widget('bar'));
+      expect(widget('bar')).toHaveStyle({ gridColumn: '3 / span 1' });
+      expect(widget('list')).toHaveStyle({ gridColumn: '4 / span 1' });
+    });
+
+    it('puts the widget back when the widget in the way has nowhere to go', () => {
+      const missing = LAYOUT.items[0].widgetConfig;
+      const full: dashboardLayout = {
+        version: 1,
+        numberOfCols: 2,
+        numberOfRows: 2,
+        items: (
+          [
+            ['a', 0, 0],
+            ['b', 1, 0],
+            ['c', 0, 1],
+            ['d', 1, 1],
+          ] as const
+        ).map(([id, x, y]) => ({
+          id,
+          x,
+          y,
+          w: 1,
+          h: 1,
+          widgetConfig: missing,
+        })),
+      };
+      const onLayoutChange = vi.fn();
+      renderGrid(full, onLayoutChange);
+      // 2 columns in 400px: each cell is 200px. Drop 'a' onto 'd'.
+      moveTo('a', 200, 200);
+      expect(movePreview()).toHaveClass('dashboard-preview--invalid');
+
+      fireEvent.pointerUp(widget('a'));
+      expect(widget('a')).toHaveStyle({
+        gridColumn: '1 / span 1',
+        gridRow: '1 / span 1',
+      });
+      expect(widget('a')).not.toHaveStyle({
+        transform: 'translate(200px, 200px)',
+      });
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('cancels the move when the pointer is cancelled', () => {
+      renderGrid();
+      moveTo('bar', 100, 100);
+      fireEvent.pointerCancel(widget('bar'));
+      expect(movePreview()).not.toBeInTheDocument();
+      expect(widget('bar')).toHaveStyle({ gridColumn: '1 / span 1' });
+    });
+
+    it('does not start a move from a resize handle', () => {
+      renderGrid();
+      dragTo(handle('xy'), 100, 0);
+      expect(movePreview()).not.toBeInTheDocument();
+      expect(preview()).toBeInTheDocument();
+    });
+
+    it('ignores presses with other mouse buttons', () => {
+      renderGrid();
+      fireEvent.pointerDown(widget('bar'), { button: 2, pointerId: 1 });
+      fireEvent.pointerMove(widget('bar'), { clientX: 100, clientY: 0 });
+      expect(movePreview()).not.toBeInTheDocument();
+    });
+  });
 });
