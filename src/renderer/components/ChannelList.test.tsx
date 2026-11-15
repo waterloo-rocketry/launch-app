@@ -6,6 +6,7 @@ import { applyFrame, createTelemetryState } from '../data/channel-store';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import type { DataFrame } from '../../shared/data-source';
 import { TestEventSource } from '../test/event-source';
+import { useTelemetry } from '../data/useTelemetry';
 
 function renderList(frame?: DataFrame, nowMs = getMockFixture().timestampMs) {
   let state = createTelemetryState(MOCK_SIGNALS);
@@ -62,8 +63,13 @@ describe('channel list', () => {
 });
 
 describe('telemetry monitor', () => {
+  function MonitorWithTelemetry() {
+    const { state, nowMs } = useTelemetry({ url: '/test-api/events' });
+    return <TelemetryMonitor state={state} nowMs={nowMs} />;
+  }
+
   it('waits for the catalogue, then lists live channels', () => {
-    render(<TelemetryMonitor url="/test-api/events" />);
+    render(<MonitorWithTelemetry />);
     expect(screen.getByText('Waiting for channels')).toBeInTheDocument();
 
     const events = TestEventSource.instances[0];
@@ -78,7 +84,7 @@ describe('telemetry monitor', () => {
 
   describe('filters', () => {
     function startMonitor() {
-      render(<TelemetryMonitor url="/test-api/events" />);
+      render(<MonitorWithTelemetry />);
       const events = TestEventSource.instances[0];
       act(() => events.signals(MOCK_SIGNALS));
       // Missing pressure is the only problem channel.

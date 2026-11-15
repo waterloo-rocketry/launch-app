@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, ReactNode } from 'react';
 import BaseComponent from './BaseComponent';
-import { useTelemetry } from '../data/useTelemetry';
+import { TelemetryState } from '../data/channel-store';
 import { getLatestReading, ChannelState } from '../data/channel-store';
 import '../styles/dashboard.css';
 import {
@@ -40,8 +40,9 @@ import {
  * If, in the future, the dashboard config needs to be accessed outside, move it to the parent and pass via this prop
  */
 export interface DashboardProps {
-  /** Telemetry event stream URL. */
-  url: string;
+  state: TelemetryState | null;
+  /** Pass to `getChannelStatus` to judge staleness. */
+  nowMs: number;
 }
 
 /**
@@ -125,8 +126,7 @@ function loadWidgetConfig(): WidgetConfig[] {
   ].map<WidgetConfig>(createDefaultWidget);
 }
 
-export default function Dashboard({ url }: DashboardProps) {
-  const { state, nowMs } = useTelemetry({ url });
+export default function Dashboard({ state, nowMs }: DashboardProps) {
   const channels = state?.channels ?? {};
   const config = useDashboard();
 

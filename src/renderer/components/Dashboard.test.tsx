@@ -4,12 +4,17 @@ import Dashboard from './Dashboard';
 import * as dashboardStore from '../data/dashboard-store';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import { TestEventSource } from '../test/event-source';
+import { useTelemetry } from '../data/useTelemetry';
 
 const widget = (label: string) => screen.getByRole('region', { name: label });
 const widgets = () => document.querySelectorAll('[data-widget-id]');
 
 function startDashboard() {
-  render(<Dashboard url="/test-api/events" />);
+  function DashboardWithTelemetry() {
+    const { state, nowMs } = useTelemetry({ url: '/test-api/events' });
+    return <Dashboard state={state} nowMs={nowMs} />;
+  }
+  render(<DashboardWithTelemetry />);
   const events = TestEventSource.instances[0];
   expect(events.url).toBe('/test-api/events');
   return events;
