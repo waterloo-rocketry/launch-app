@@ -153,17 +153,44 @@ h2 {
 .dashboard-grid {
   display: grid;
   height: calc(100vh - 250px);
-  /* grid-auto-rows: repeat(4, 1fr); */
   gap: 1rem;
   margin-top: 1.5rem;
 }
+/* The cell clips; only the inner content scrolls, so the handle stays put. */
 .dashboard-cell {
+  position: relative;
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  padding: 0.75rem;
+  overflow: hidden;
   background: white;
   border: 1px solid #dfe3e8;
   border-radius: 6px;
+}
+.dashboard-cell__content {
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: 0.75rem;
+}
+.dashboard-cell__resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  touch-action: none; /* stop touch screens from scrolling while dragging */
+  /* Two faint diagonal lines in the corner. */
+  background: linear-gradient(
+    135deg,
+    transparent 45%,
+    #c9ced6 45%,
+    #c9ced6 55%,
+    transparent 55%,
+    transparent 70%,
+    #c9ced6 70%,
+    #c9ced6 80%,
+    transparent 80%
+  );
 }
