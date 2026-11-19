@@ -1,52 +1,30 @@
-import { useState } from 'react';
-import { EMPTY_FILTER, filterChannels } from '../data/channel-filter';
 import { useTelemetry } from '../data/useTelemetry';
-import { ChannelFilters } from './ChannelFilters';
-import { ChannelList } from './ChannelList';
-import { ProgressBar } from './ProgressBar';
+import { DashboardGrid } from './DashboardGrid';
+import { DEFAULT_LAYOUT, type dashboardLayout } from '../Layout';
 
 interface TelemetryMonitorProps {
   /** Telemetry event stream URL. */
   url: string;
+  /**
+   * Dashboard layout to show. Pass the same object on every render: a
+   * different object makes the grid start over from it.
+   */
+  layout?: dashboardLayout;
 }
 
-export function TelemetryMonitor({ url }: TelemetryMonitorProps) {
+export function TelemetryMonitor({
+  url,
+  layout = DEFAULT_LAYOUT,
+}: TelemetryMonitorProps) {
   const { state, nowMs } = useTelemetry({ url });
-  const [filter, setFilter] = useState(EMPTY_FILTER);
 
   const content = () => {
     if (!state) return <p>Waiting for channels</p>;
-    const channels = Object.values(state.channels);
-    if (channels.length === 0) return <p>No channels configured</p>;
-    // Temporary demo for issue #33: only the mock server has these channels.
-    const pressure = state.channels['test.pressure'];
-    const temperature = state.channels['test.temperature'];
+    if (Object.keys(state.channels).length === 0) {
+      return <p>No channels configured</p>;
+    }
     return (
-      <>
-        <ChannelFilters filter={filter} onChange={setFilter} />
-        <ChannelList
-          channels={filterChannels(channels, filter, nowMs)}
-          nowMs={nowMs}
-          emptyMessage="No channels match the filters"
-          onHide={(signalId) =>
-            setFilter((current) => ({
-              ...current,
-              hidden: new Set(current.hidden).add(signalId),
-            }))
-          }
-        />
-        <div className="progress-bar-demo">
-          {pressure && (
-            <ProgressBar channel={pressure} min={0} max={100} nowMs={nowMs} />
-          )}
-          {pressure && (
-            <ProgressBar channel={pressure} min={30} max={45} nowMs={nowMs} />
-          )}
-          {temperature && (
-            <ProgressBar channel={temperature} min={0} max={40} nowMs={nowMs} />
-          )}
-        </div>
-      </>
+      <DashboardGrid layout={layout} telemetryState={state} nowMs={nowMs} />
     );
   };
 

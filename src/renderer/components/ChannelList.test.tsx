@@ -5,7 +5,28 @@ import { TelemetryMonitor } from './TelemetryMonitor';
 import { applyFrame, createTelemetryState } from '../data/channel-store';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import type { DataFrame } from '../../shared/data-source';
+import type { dashboardLayout } from '../Layout';
 import { TestEventSource } from '../test/event-source';
+
+/**
+ * One channel-list widget, so these tests don't depend on DEFAULT_LAYOUT
+ * (demo data that changes). Defined once: the grid resets on a new object.
+ */
+const MONITOR_LAYOUT: dashboardLayout = {
+  version: 1,
+  numberOfCols: 1,
+  numberOfRows: 1,
+  items: [
+    {
+      id: 'channels',
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
+      widgetConfig: { kind: 'channel-list', problemOnly: false },
+    },
+  ],
+};
 
 function renderList(frame?: DataFrame, nowMs = getMockFixture().timestampMs) {
   let state = createTelemetryState(MOCK_SIGNALS);
@@ -63,7 +84,7 @@ describe('channel list', () => {
 
 describe('telemetry monitor', () => {
   it('waits for the catalogue, then lists live channels', () => {
-    render(<TelemetryMonitor url="/test-api/events" />);
+    render(<TelemetryMonitor url="/test-api/events" layout={MONITOR_LAYOUT} />);
     expect(screen.getByText('Waiting for channels')).toBeInTheDocument();
 
     const events = TestEventSource.instances[0];
@@ -78,7 +99,9 @@ describe('telemetry monitor', () => {
 
   describe('filters', () => {
     function startMonitor() {
-      render(<TelemetryMonitor url="/test-api/events" />);
+      render(
+        <TelemetryMonitor url="/test-api/events" layout={MONITOR_LAYOUT} />,
+      );
       const events = TestEventSource.instances[0];
       act(() => events.signals(MOCK_SIGNALS));
       // Missing pressure is the only problem channel.
