@@ -342,6 +342,20 @@ export function DashboardGrid({
         gridTemplateRows: `repeat(${numberOfRows}, minmax(0, 1fr))`,
       }}
     >
+      {/* One faint outline per grid cell, drawn first so widgets cover it. */}
+      {Array.from({ length: numberOfCols * numberOfRows }, (_, i) => (
+        <div
+          key={`slot-${i}`}
+          className="dashboard-slot"
+          aria-hidden="true"
+          style={placement({
+            x: i % numberOfCols,
+            y: Math.floor(i / numberOfCols),
+            w: 1,
+            h: 1,
+          })}
+        />
+      ))}
       {items.map((item) => (
         <div
           key={item.id}

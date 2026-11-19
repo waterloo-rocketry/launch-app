@@ -153,8 +153,11 @@ h2 {
 .dashboard-grid {
   display: grid;
   height: calc(100vh - 250px);
-  gap: 1rem;
+  /* No gap: cells touch, so their lines form one spreadsheet-like grid. */
+  gap: 0;
   margin-top: 1.5rem;
+  /* Top and left edge of the grid; each slot draws its own right and bottom. */
+  box-shadow: inset 1px 1px 0 rgb(0 0 0 / 12%);
 }
 /* The cell clips; only the inner content scrolls, so the handle stays put. */
 .dashboard-cell {
@@ -165,7 +168,15 @@ h2 {
   overflow: hidden;
   background: white;
   border: 1px solid #dfe3e8;
-  border-radius: 6px;
+  border-radius: 0;
+}
+/* Faint outline of every grid cell, empty or not. Sits behind the widgets. */
+.dashboard-slot {
+  box-sizing: border-box;
+  /* Only right and bottom, so neighbouring cells share one line, not two. */
+  border-right: 1px solid rgb(0 0 0 / 12%);
+  border-bottom: 1px solid rgb(0 0 0 / 12%);
+  pointer-events: none;
 }
 .dashboard-cell__content {
   box-sizing: border-box;
@@ -224,7 +235,7 @@ h2 {
   box-sizing: border-box;
   /* 1px dashed: thinner, and the browser draws shorter, more frequent dashes. */
   border: 1px dashed rgb(47 111 237 / 55%);
-  border-radius: 6px;
+  border-radius: 0;
   background: rgb(47 111 237 / 4%);
   pointer-events: none;
 }
