@@ -28,7 +28,7 @@ function getFill(value: number, min: number, max: number) {
 }
 
 export default function RegisterProgressBar(){
-  RegisterWidget({renderingFunction: ProgressBar, availableActions: {}, componentType: 'progress-bar'})
+  RegisterWidget('progress-bar', {renderingFunction: ProgressBar, availableActions: {}})
 }
 
 /** Draws the progress bar */

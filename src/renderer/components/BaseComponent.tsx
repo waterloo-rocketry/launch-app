@@ -5,18 +5,25 @@ import { useChannel, ChannelData } from '../data/telemetry-context';
 /**
  * BaseComponent
  *
- * Common container for numeric, plot, and gauge widgets. Renders a heading,
+ * Parent container for numeric, plot, and gauge widgets. Renders a heading,
  * a status presentation, and a body slot for arbitrary visualization content.
- * Doesn't create any data visualizations, that's what children are for.
+ * Doesn't create any data visualizations, widget renderings are delegated to
+ * each children's render function.
+ * 
+ * Dashboard responsible for layout only; it creates BaseComponent and
+ * BaseComponent is responsible for reading channels and rendering widgets. 
  *
  * Props:
  *  - id            Unique, stable identifier for this widget instance.
  *                  Rendered as `data-widget-id`.
- *  - componentType "numeric" | "plot" | "gauge". Used for deciding what to render
- *  - channels      The ChannelStates the widget is using. 
- *  - title         The title. Default is channel signal label.
- *  - errorMessage  Overrides the default text for the missing/invalid states.
- *  - config        Passed directly to the children widget during rendering
+ *  - componentType "numeric" | "plot" | "gauge" | "progress-bar". Used for 
+ *                  deciding what to render
+ *  - channels      The channels the widget is subscribing. Can be empty
+ *  - title         The title. Nullable. Default is channel signal label.
+ *  - config        The config for the child widget. Passed directly to the 
+ *                  children widget during rendering
+ *  - height        The widget height, passed from dashboard. Nullable
+ *  - width         The widget width, passed from dashboard. Nullable
  *
  * Each status is also a class on the wrapper (`widget--active`, `widget--stale`,
  * etc.) for styling. The wrapper fills its parent, and `.widget__body` takes the
@@ -24,49 +31,116 @@ import { useChannel, ChannelData } from '../data/telemetry-context';
  * types of widgets as needed
  *
  * Example:
- *   <BaseComponent
- *     id="pressure"
- *     componentType="numeric"
- *     title="Numeric"
- *     channel=["test.pressure"]
- *   >
- *   </BaseComponent>
+ *   <BaseComponent 
+ *      id={"pressure1"} 
+ *      componentType='progress-bar' 
+ *      channels={['test.pressure']} 
+ *      config={{min: 0, max: 100}}
+ *  />
  */
 
+/**
+ * The widget types accepted by BaseWidget. 
+ * 
+ * Enumerating on this type is not recommended as more types may be added during 
+ * developing. 
+ * 
+ * New types shall be added when a new widget is created
+ */
 export type ComponentType = 'numeric' | 'plot' | 'gauge' | 'progress-bar';
 
+/**
+ * The properties that will be passed to the rendering function. 
+ * This includes the channles subscribed, and the custom config. 
+ * 
+ * Note that channels may be null.
+ * 
+ * `width` and `height` are passed from the dashboard. The only purpose
+ * of `width` and `height` is for the widget to adjust itself based on
+ * the container's size. 
+ * 
+ * Note that BaseComponent does not guarentee that the `config` is the
+ * type required by the widget. Widgets need to perform a typecheck in
+ * the beginning to make sure the type is correct. 
+ */
 export interface WidgetProps {
+  /** 
+   * The channels the widget subscribed. Note that this is created based on config
+   * and may not be compatible to the widget if the config is stale. 
+  */
   channels: (ChannelData | null)[];
+  /** The width of the container. Used to adjust layout. */
   width?: number;
+  /** The height of the container. Used to adjust layout. */
   height?: number;
+  /** 
+   * The config of the widget. For example: min and max of a progress bar. 
+   * Note that this needs to be type checked before using.
+   */
   config?: object;
 }
 
+/**
+ * The properties that will be passed to BaseComponent to render the widget
+ */
 export interface WidgetConfig {
+  /** The globally unique ID of the widget */
   id: string;
+  /** The component type of the widget. Used for styling and rendering */
   componentType: ComponentType;
+  /** The channel IDs that the widget subscribes. BaseComponent reads the channel */
   channels: string[];
+  /** The title of the widget. Defaults to the channels the widget is subscribed to */
   title?: string;
+  /** The config passed to the widget during rendering */
   config?: object;
+  /** The height of the container. Used to adjust layout. */
   height?: number;
+  /** The width of the container. Used to adjust layout. */
   width?: number;
+  /** 
+   * The function to update the config 
+   * For convenience the parameter is the entire `WidgetConfig`. The function may
+   * assume width and height are readonly. 
+   */
+  updateConfig: (config: WidgetConfig) => void;
 }
 
+/**
+ * The registry widgets must provide when registering themselves. 
+ */
 export interface WidgetRegistry {
+  /**
+   * The rendering function of the widget
+   * @param props the property as described
+   * @returns the rendered widget
+   */
   renderingFunction: (props: WidgetProps) => ReactNode;
+  /**
+   * The available actions (configs) the widget can perform. 
+   * When the user chose an action, the corresponding function is called, and
+   * the widget is then responsible for updating the config. If the widget returns null
+   * then the config is unchanged. 
+   */
   availableActions: Record<string, (config?: WidgetConfig) => WidgetConfig | undefined>;
+  /** The widget can chose an override message when chanenl errors */
   overrideErrorMessage?: string;
-  componentType: ComponentType;
 }
 
+/** Internal object used for parsing */
 interface ParsedChannel{
   channels: (ChannelData | null)[];
   overlayMessage: String | null;
   componentStatus: String;
 }
 
+/**The registered widgets */
 const registeredWidgets = new Map<ComponentType, WidgetRegistry>();
 
+/** 
+ * The styling of component status is based on the severity of the error 
+ * All status except for "active" are shown but the styling follows the most severe one. 
+ * */
 const componentStatusSeverityMap = {
   'missing-channel': 6,
   'disconnected': 5,
@@ -79,11 +153,17 @@ const componentStatusSeverityMap = {
 
 const componentStatusSeverity = ['active', 'stale', 'no-data', 'invalid', 'missing', 'disconnected', 'missing-channel']
 
-export function RegisterWidget(widget: WidgetRegistry) {
-  registeredWidgets.set(widget.componentType, widget);
+/**
+ * Register a widget
+ * @param type the component type of this widet
+ * @param widget the registry
+ */
+export function RegisterWidget(type: ComponentType, widget: WidgetRegistry) {
+  registeredWidgets.set(type, widget);
 }
 
 export default function BaseComponent(config: WidgetConfig) {
+  console.log(JSON.stringify(registeredWidgets))
   const widget = registeredWidgets.get(config.componentType)
   const errorMessage = widget?.overrideErrorMessage
 
@@ -96,7 +176,7 @@ export default function BaseComponent(config: WidgetConfig) {
     return {channels, overlayMessage, componentStatus: componentStatusSeverity[componentStatusMostSevere]};
   }
 
-  //Overlays any errors, otherwise no message is dispalyed
+  // Overlays any errors, otherwise no message is dispalyed
   const getOverlayMessage = (channel: string, componentStatus: string): string | null => {
     switch (componentStatus) {
       case 'no-data':
@@ -112,12 +192,15 @@ export default function BaseComponent(config: WidgetConfig) {
     }
   };
 
+  /**
+   * The suffix only shows the most severe status
+   */
   const {channels, overlayMessage, componentStatus} = parseChannels();
   const suffix =
     componentStatus === 'stale' || componentStatus === 'disconnected'
       ? ` (${componentStatus})`
       : '';
-  const heading = config.title ?? channels.map(c => c?.channel?.signal?.kind ?? "").join(" | ")
+  const heading = config.title ?? channels.map(c => c?.channel?.signal?.label ?? "").join(" | ")
 
   return (
     <section
@@ -132,7 +215,7 @@ export default function BaseComponent(config: WidgetConfig) {
           aria-hidden={overlayMessage !== null}
           inert={overlayMessage !== null}
         >
-          {widget?.renderingFunction({channels, width: config.width, height: config.height, config: config.config})}
+          {widget?.renderingFunction({channels, width: config.width, height: config.height, config: config.config}) ?? "No Content"}
         </div>
         {overlayMessage !== null && (
           <p className="widget__overlay" role="alert">
