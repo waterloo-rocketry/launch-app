@@ -1,10 +1,8 @@
 import BaseComponent from './BaseComponent';
-import { getLatestReading, type ChannelState } from '../data/channel-store';
+import { useChannel } from '../data/telemetry-context';
 
 interface NumericWidgetProps {
   id: string;
-  channel?: ChannelState;
-  currentTime: number;
   title?: string;
 }
 
@@ -15,13 +13,10 @@ function formatNumber(value: unknown): string | null {
 }
 
 /** Shows the latest numeric value of one channel inside the shared container. */
-export default function NumericWidget({
-  id,
-  channel,
-  currentTime,
-  title,
-}: NumericWidgetProps) {
-  const latest = channel ? getLatestReading(channel) : undefined;
+export default function NumericWidget({ id, title }: NumericWidgetProps) {
+  const data = useChannel(id);
+  const channel = data?.channel;
+  const latest = data?.latest;
   const text = latest ? formatNumber(latest.value) : null;
   const unit = channel?.signal.unit;
 
@@ -39,10 +34,10 @@ export default function NumericWidget({
       id={id}
       componentType="numeric"
       channel={channel}
-      currentTime={currentTime}
+      currentTime={data?.nowMs ?? 0}
       title={title}
     >
-      <p data-testid="numeric-value">{content}</p>
+      <p data-testid="numeric-value">{content}</p >
     </BaseComponent>
   );
 }

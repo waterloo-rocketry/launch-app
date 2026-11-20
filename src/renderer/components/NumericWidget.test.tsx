@@ -1,109 +1,92 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import NumericWidget from './NumericWidget';
-import {
-  applyFrame,
-  createTelemetryState,
-  getLatestReading,
-  type ChannelState,
-} from '../data/channel-store';
-import {
-  getMockFixture,
-  MOCK_SIGNALS,
-  type MockScenario,
-} from '../data/mock/fixtures';
+import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
+import { TelemetryProvider } from '../data/TelemetryProvider';
+import { TestEventSource } from '../test/event-source';
 
-const NOW = getMockFixture().timestampMs;
-
-function channelsAfter(...scenarios: MockScenario[]) {
-  let state = createTelemetryState(MOCK_SIGNALS);
-  for (const scenario of scenarios) {
-    state = applyFrame(state, getMockFixture(scenario));
-  }
-  return state.channels;
+function setup(signalId = 'test.pressure') {
+  render(
+    <TelemetryProvider url="/test-api/events">
+      <NumericWidget id={signalId} />
+    </TelemetryProvider>,
+  );
+  return TestEventSource.instances[0];
 }
 
-function withReading(
-  channel: ChannelState,
-  value: number,
-  timestampMs: number,
-): ChannelState {
-  const latest = getLatestReading(channel);
-  if (!latest) throw new Error('expected a reading');
+/** A nominal frame with a new pressure value and a newer timestamp. */
+function frameWithPressure(value: number, offsetMs: number) {
+  const base = getMockFixture();
+  const timestampMs = base.timestampMs + offsetMs;
   return {
-    ...channel,
-    history: [
-      ...channel.history,
-      {
-        signalId: latest.signalId,
-        timestampMs,
-        quality: 'good' as const,
-        value,
-      },
-    ],
+    ...base,
+    sequence: base.sequence + 1,
+    timestampMs,
+    readings: base.readings.map((reading) =>
+      reading.signalId === 'test.pressure'
+        ? { ...reading, timestampMs, value }
+        : reading,
+    ),
   };
-}
-
-function renderWidget(channel: ChannelState | undefined) {
-  return render(<NumericWidget id="n1" channel={channel} currentTime={NOW} />);
 }
 
 describe('NumericWidget', () => {
   it('shows the latest value of the selected channel', () => {
-    const channel = channelsAfter('nominal')['test.pressure'];
-    const latest = getLatestReading(channel);
-    if (!latest) throw new Error('expected a reading');
+    const events = setup();
+    act(() => events.signals(MOCK_SIGNALS));
+    act(() => events.frame(getMockFixture()));
 
-    renderWidget(channel);
-
-    expect(screen.getByTestId('numeric-value').textContent).toContain(
-      String(latest.value),
-    );
+    expect(screen.getByTestId('numeric-value').textContent).toContain('kPa');
   });
 
   it('updates when a newer reading arrives', () => {
-    const channel = channelsAfter('nominal')['test.pressure'];
-    const { rerender } = renderWidget(channel);
-
-    rerender(
-      <NumericWidget
-        id="n1"
-        channel={withReading(channel, 123.5, NOW + 1)}
-        currentTime={NOW}
-      />,
-    );
+    const events = setup();
+    act(() => events.signals(MOCK_SIGNALS));
+    act(() => events.frame(getMockFixture()));
+    act(() => events.frame(frameWithPressure(123.5, 1000)));
 
     expect(screen.getByTestId('numeric-value').textContent).toContain('123.5');
   });
 
   it('shows a clear message when the value is not a number', () => {
-    const channel = channelsAfter('nominal')['test.pressure'];
+    const events = setup();
+    act(() => events.signals(MOCK_SIGNALS));
+    const frame = getMockFixture();
+    const bad = {
+      ...frame,
+      readings: frame.readings.map((reading) =>
+        reading.signalId === 'test.pressure'
+          ? { ...reading, value: 'abc' as unknown as number }
+          : reading,
+      ),
+    };
+    act(() => events.frame(bad));
 
-    renderWidget(withReading(channel, NaN, NOW + 1));
-
-    expect(screen.getByTestId('numeric-value').textContent).toBe(
-      'Not a number',
-    );
+    expect(screen.getByTestId('numeric-value').textContent).toBe('Not a number');
   });
 
+
   it('shows a no-data message before any reading', () => {
-    renderWidget(channelsAfter()['test.pressure']);
+    const events = setup();
+    act(() => events.signals(MOCK_SIGNALS));
 
     expect(screen.getByRole('alert').textContent).toContain('No data!');
     expect(screen.getByTestId('numeric-value').textContent).toBe('--');
   });
 
   it('flags stale data in the heading', () => {
-    renderWidget(channelsAfter('stale')['test.pressure']);
+    const events = setup();
+    act(() => events.signals(MOCK_SIGNALS));
+    act(() => events.frame(getMockFixture('stale')));
 
     expect(screen.getByRole('heading').textContent).toContain('stale');
   });
 
   it('shows a channel-not-found message when the channel is missing', () => {
-    renderWidget(undefined);
+    const events = setup('does.not.exist');
+    act(() => events.signals(MOCK_SIGNALS));
 
-    expect(screen.getByRole('alert').textContent).toContain(
-      'Channel not found!',
-    );
+    expect(screen.getByRole('alert').textContent).toContain('Channel not found!');
   });
 });
+
