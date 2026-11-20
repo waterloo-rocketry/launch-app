@@ -27,7 +27,7 @@ export interface ChannelData {
   nowMs: number;
 }
 
-// Binds widget to one telemetry channel. Returns null until the signal catalogue arrives or if channel does not exist
+// Binds widget to some telemetry channels. Returns null until the signal catalogue arrives or if channel does not exist
 export function useChannel(signalId: string[]): (ChannelData | null)[] {
   const telemetry = useContext(TelemetryContext);
   if (!telemetry) {
