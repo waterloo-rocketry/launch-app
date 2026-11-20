@@ -1,15 +1,13 @@
-import { useMemo, type ReactNode } from 'react';
+import type { ComponentType as ReactComponentType } from 'react';
 import '../styles/baseComponent.css';
-import { useChannel, ChannelData } from '../data/telemetry-context';
+import { useChannel, type ChannelData } from '../data/telemetry-context';
 import ProgressBar from './ProgressBar';
 
 /**
  * BaseComponent
  *
  * Parent container for numeric, plot, and gauge widgets. Renders a heading,
- * a status presentation, and a body slot for arbitrary visualization content.
- * Doesn't create any data visualizations, widget renderings are delegated to
- * each children's render function.
+ * a status presentation, and a registered visualization for its type.
  *
  * Dashboard responsible for layout only; it creates BaseComponent and
  * BaseComponent is responsible for reading channels and rendering widgets.
@@ -19,10 +17,10 @@ import ProgressBar from './ProgressBar';
  *                  Rendered as `data-widget-id`.
  *  - componentType "numeric" | "plot" | "gauge" | "progress-bar". Used for
  *                  deciding what to render
- *  - channels      The channels the widget is subscribing. Can be empty
+ *  - channels      The channels the widget is subscribing. Can be empty so
+ *                  static widgets use the same container and registry.
  *  - title         The title. Nullable. Default is channel signal label.
- *  - config        The config for the child widget. Passed directly to the
- *                  children widget during rendering
+ *  - config        The config passed to the registered widget
  *  - height        The widget height, passed from dashboard. Nullable
  *  - width         The widget width, passed from dashboard. Nullable
  *
@@ -89,7 +87,7 @@ export interface WidgetConfig {
   id: string;
   /** The component type of the widget. Used for styling and rendering */
   componentType: ComponentType;
-  /** The channel IDs that the widget subscribes. BaseComponent reads the channel */
+  /** Channel IDs to read. Empty for widgets that do not depend on telemetry. */
   channels: string[];
   /** The title of the widget. Defaults to the channels the widget is subscribed to */
   title?: string;
@@ -116,7 +114,7 @@ interface WidgetRegistry {
    * @param props the property as described
    * @returns the rendered widget
    */
-  renderingFunction: (props: WidgetProps) => ReactNode;
+  renderingFunction: ReactComponentType<WidgetProps>;
   /**
    * The available actions (configs) the widget can perform.
    * When the user chose an action, the corresponding function is called, and
@@ -164,18 +162,16 @@ const componentStatusSeverity = [
 /**
  * Register all widgets
  */
-function registerWidget(): Record<ComponentType, WidgetRegistry | undefined> {
-  return {
-    'progress-bar': { renderingFunction: ProgressBar, availableActions: {} },
-    gauge: undefined,
-    numeric: undefined,
-    plot: undefined,
-  };
-}
+const registeredWidgets: Record<ComponentType, WidgetRegistry | undefined> = {
+  'progress-bar': { renderingFunction: ProgressBar, availableActions: {} },
+  gauge: undefined,
+  numeric: undefined,
+  plot: undefined,
+};
 
 export default function BaseComponent(config: WidgetConfig) {
-  const registeredWidgets = useMemo(() => registerWidget(), []);
   const widget = registeredWidgets[config.componentType];
+  const Widget = widget?.renderingFunction;
   const errorMessage = widget?.overrideErrorMessage;
   const channels = useChannel(config.channels);
 
@@ -183,7 +179,7 @@ export default function BaseComponent(config: WidgetConfig) {
     const messages = channels
       .map((c, idx) =>
         getOverlayMessage(
-          c?.channel.sourceId ?? config.channels[idx],
+          c?.channel.signal.label ?? config.channels[idx],
           c?.status ?? 'missing-channel',
         ),
       )
@@ -236,7 +232,9 @@ export default function BaseComponent(config: WidgetConfig) {
       : '';
   const heading =
     config.title ??
-    channels.map((c) => c?.channel?.signal?.label ?? '').join(' | ');
+    channels
+      .map((c, idx) => c?.channel.signal.label ?? config.channels[idx])
+      .join(' | ');
 
   return (
     <section
@@ -251,12 +249,16 @@ export default function BaseComponent(config: WidgetConfig) {
           aria-hidden={overlayMessage !== null}
           inert={overlayMessage !== null}
         >
-          {widget?.renderingFunction({
-            channels,
-            width: config.width,
-            height: config.height,
-            config: config.config,
-          }) ?? 'No Content'}
+          {Widget ? (
+            <Widget
+              channels={channels}
+              width={config.width}
+              height={config.height}
+              config={config.config}
+            />
+          ) : (
+            'No Content'
+          )}
         </div>
         {overlayMessage !== null && (
           <p className="widget__overlay" role="alert">

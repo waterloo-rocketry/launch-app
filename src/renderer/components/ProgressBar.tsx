@@ -1,6 +1,5 @@
-import { ReactNode } from 'react';
-import { getChannelStatus } from '../data/channel-store';
-import { WidgetProps } from './BaseComponent';
+import type { ReactNode } from 'react';
+import type { WidgetProps } from './BaseComponent';
 
 interface ProgressBarProps {
   min: number;
@@ -33,7 +32,7 @@ export default function ProgressBar(prop: WidgetProps): ReactNode {
   if (!channel) return 'No Channel Connected';
 
   const { label, unit, kind } = channel.channel.signal;
-  const status = getChannelStatus(channel.channel, channel.nowMs);
+  const status = channel.status;
   const nowMs = channel.nowMs;
   const latest = channel.latest;
 
