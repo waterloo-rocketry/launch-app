@@ -62,9 +62,10 @@ describe('NumericWidget', () => {
     };
     act(() => events.frame(bad));
 
-    expect(screen.getByTestId('numeric-value').textContent).toBe('Not a number');
+    expect(screen.getByTestId('numeric-value').textContent).toBe(
+      'Not a number',
+    );
   });
-
 
   it('shows a no-data message before any reading', () => {
     const events = setup();
@@ -86,7 +87,8 @@ describe('NumericWidget', () => {
     const events = setup('does.not.exist');
     act(() => events.signals(MOCK_SIGNALS));
 
-    expect(screen.getByRole('alert').textContent).toContain('Channel not found!');
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Channel not found!',
+    );
   });
 });
-

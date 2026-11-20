@@ -37,7 +37,7 @@ export default function NumericWidget({ id, title }: NumericWidgetProps) {
       currentTime={data?.nowMs ?? 0}
       title={title}
     >
-      <p data-testid="numeric-value">{content}</p >
+      <p data-testid="numeric-value">{content}</p>
     </BaseComponent>
   );
 }
