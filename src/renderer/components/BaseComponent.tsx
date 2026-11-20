@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import '../styles/baseComponent.css';
 import { useChannel, ChannelData } from '../data/telemetry-context';
+import ProgressBar from './ProgressBar';
 
 /**
  * BaseComponent
@@ -109,7 +110,7 @@ export interface WidgetConfig {
 /**
  * The registry widgets must provide when registering themselves. 
  */
-export interface WidgetRegistry {
+interface WidgetRegistry {
   /**
    * The rendering function of the widget
    * @param props the property as described
@@ -134,9 +135,6 @@ interface ParsedChannel{
   componentStatus: String;
 }
 
-/**The registered widgets */
-const registeredWidgets = new Map<ComponentType, WidgetRegistry>();
-
 /** 
  * The styling of component status is based on the severity of the error 
  * All status except for "active" are shown but the styling follows the most severe one. 
@@ -154,17 +152,20 @@ const componentStatusSeverityMap = {
 const componentStatusSeverity = ['active', 'stale', 'no-data', 'invalid', 'missing', 'disconnected', 'missing-channel']
 
 /**
- * Register a widget
- * @param type the component type of this widet
- * @param widget the registry
+ * Register all widgets
  */
-export function RegisterWidget(type: ComponentType, widget: WidgetRegistry) {
-  registeredWidgets.set(type, widget);
+function registerWidget(): Record<ComponentType, WidgetRegistry | undefined> {
+  return {
+    'progress-bar': {renderingFunction: ProgressBar, availableActions: {}},
+    'gauge': undefined,
+    'numeric': undefined,
+    'plot': undefined
+  }
 }
 
 export default function BaseComponent(config: WidgetConfig) {
-  console.log(JSON.stringify(registeredWidgets))
-  const widget = registeredWidgets.get(config.componentType)
+  const registeredWidgets = useMemo(() => registerWidget(), [])
+  const widget = registeredWidgets[config.componentType]
   const errorMessage = widget?.overrideErrorMessage
 
   const parseChannels = (): ParsedChannel => {

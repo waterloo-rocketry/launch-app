@@ -27,12 +27,8 @@ function getFill(value: number, min: number, max: number) {
   };
 }
 
-export default function RegisterProgressBar(){
-  RegisterWidget('progress-bar', {renderingFunction: ProgressBar, availableActions: {}})
-}
-
 /** Draws the progress bar */
-function ProgressBar(prop: WidgetProps): ReactNode {
+export default function ProgressBar(prop: WidgetProps): ReactNode {
   const channel = prop.channels[0];
   if (!channel) return "No Channel Connected"
 

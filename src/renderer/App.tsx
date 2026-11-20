@@ -3,18 +3,12 @@ import { Header } from './components/Header';
 import { MockConnectionStatus } from './components/MockConnectionStatus';
 import { TelemetryMonitor } from './components/TelemetryMonitor';
 import BaseComponent from './components/BaseComponent';
-import RegisterProgressBar from './components/ProgressBar';
 import { TelemetryProvider } from './data/TelemetryProvider';
-import { useEffect } from 'react';
 
 // Vite proxies this to the standalone mock server during development.
 const MOCK_TELEMETRY_URL = '/mock-api/events';
 
 export default function App() {
-  useEffect(
-    () => RegisterProgressBar()
-  , [])
-
   return (
     <div className="app-shell">
       <Header title={APP_NAME} />
