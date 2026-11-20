@@ -20,9 +20,27 @@ export default function App() {
         {/* Demo for issue #28: a widget bound to one channel via useChannel. */}
         {import.meta.env.DEV && (
           <TelemetryProvider url={MOCK_TELEMETRY_URL}>
-            <BaseComponent id={"pressure1"} componentType='progress-bar' channels={['test.pressure']} config={{min: 0, max: 100}} updateConfig={(_) => {}}/>
-            <BaseComponent id={"pressure2"} componentType='progress-bar' channels={['test.pressure']} config={{min: 30, max: 45}} updateConfig={(_) => {}}/>
-            <BaseComponent id={"temperature1"} componentType='progress-bar' channels={['test.temperature']} config={{min: 0, max: 40}} updateConfig={(_) => {}}/>
+            <BaseComponent
+              id={'pressure1'}
+              componentType="progress-bar"
+              channels={['test.pressure']}
+              config={{ min: 0, max: 100 }}
+              updateConfig={() => {}}
+            />
+            <BaseComponent
+              id={'pressure2'}
+              componentType="progress-bar"
+              channels={['test.pressure']}
+              config={{ min: 30, max: 45 }}
+              updateConfig={() => {}}
+            />
+            <BaseComponent
+              id={'temperature1'}
+              componentType="progress-bar"
+              channels={['test.temperature']}
+              config={{ min: 0, max: 40 }}
+              updateConfig={() => {}}
+            />
           </TelemetryProvider>
         )}
 

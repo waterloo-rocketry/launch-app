@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { getChannelStatus } from '../data/channel-store';
-import { RegisterWidget, WidgetProps } from './BaseComponent';
+import { WidgetProps } from './BaseComponent';
 
 interface ProgressBarProps {
   min: number;
@@ -30,17 +30,17 @@ function getFill(value: number, min: number, max: number) {
 /** Draws the progress bar */
 export default function ProgressBar(prop: WidgetProps): ReactNode {
   const channel = prop.channels[0];
-  if (!channel) return "No Channel Connected"
+  if (!channel) return 'No Channel Connected';
 
   const { label, unit, kind } = channel.channel.signal;
   const status = getChannelStatus(channel.channel, channel.nowMs);
-  const nowMs = channel.nowMs
-  const latest = channel.latest
+  const nowMs = channel.nowMs;
+  const latest = channel.latest;
 
-  const config = prop.config as ProgressBarProps ?? {min: 0, max: 100}
+  const config = (prop.config as ProgressBarProps) ?? { min: 0, max: 100 };
 
-  const min = config.min
-  const max = config.max
+  const min = config.min;
+  const max = config.max;
 
   // A true/false or text channel can't be drawn as a bar.
   if (kind !== 'number') {

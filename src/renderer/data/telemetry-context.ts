@@ -28,18 +28,20 @@ export interface ChannelData {
 }
 
 // Binds widget to one telemetry channel. Returns null until the signal catalogue arrives or if channel does not exist
-export function useChannel(signalId: string): ChannelData | null {
+export function useChannel(signalId: string[]): (ChannelData | null)[] {
   const telemetry = useContext(TelemetryContext);
   if (!telemetry) {
     throw new Error('useChannel must be used inside a TelemetryProvider');
   }
-  const channel = telemetry.state?.channels[signalId];
-  if (!channel) return null;
-  return {
-    channel,
-    latest: getLatestReading(channel),
-    history: channel.history,
-    status: getChannelStatus(channel, telemetry.nowMs),
-    nowMs: telemetry.nowMs,
-  };
+  return signalId.map((signalId) => {
+    const channel = telemetry.state?.channels[signalId];
+    if (!channel) return null;
+    return {
+      channel,
+      latest: getLatestReading(channel),
+      history: channel.history,
+      status: getChannelStatus(channel, telemetry.nowMs),
+      nowMs: telemetry.nowMs,
+    };
+  });
 }
