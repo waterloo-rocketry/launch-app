@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import '../styles/baseComponent.css';
-import { getChannelStatus, type ChannelState } from '../data/channel-store';
+import { useChannel, ChannelData } from '../data/telemetry-context';
 
 /**
  * BaseComponent
@@ -12,16 +12,11 @@ import { getChannelStatus, type ChannelState } from '../data/channel-store';
  * Props:
  *  - id            Unique, stable identifier for this widget instance.
  *                  Rendered as `data-widget-id`.
- *  - componentType "numeric" | "plot" | "gauge". Used only as a CSS class
- *                  (`widget--<type>`); the container does not branch on it.
- *  - channel       The ChannelState the widget is using
+ *  - componentType "numeric" | "plot" | "gauge". Used for deciding what to render
+ *  - channels      The ChannelStates the widget is using. 
  *  - title         The title. Default is channel signal label.
- *  - currentTime   Current time in ms. Used to decide whether the channel is
- *                  stale, so the parent must pass a ticking value (e.g. `nowMs`
- *                  from useTelemetry) or staleness will never update. If this
- *                  needs changing in the future go for it
  *  - errorMessage  Overrides the default text for the missing/invalid states.
- *  - children      What is rendered inside the widget
+ *  - config        Passed directly to the children widget during rendering
  *
  * Each status is also a class on the wrapper (`widget--active`, `widget--stale`,
  * etc.) for styling. The wrapper fills its parent, and `.widget__body` takes the
@@ -32,65 +27,102 @@ import { getChannelStatus, type ChannelState } from '../data/channel-store';
  *   <BaseComponent
  *     id="pressure"
  *     componentType="numeric"
- *     channel={channels["test.pressure"]}
- *     currentTime={nowMs}
+ *     title="Numeric"
+ *     channel=["test.pressure"]
  *   >
- *     <p>42 kPa</p>
  *   </BaseComponent>
  */
 
-export type ComponentType = 'numeric' | 'plot' | 'gauge';
+export type ComponentType = 'numeric' | 'plot' | 'gauge' | 'progress-bar';
 
-interface BaseProps {
-  id: string;
-  componentType: ComponentType;
-  channel?: ChannelState;
-  title?: string;
-  currentTime: number;
-  errorMessage?: string;
-  children?: ReactNode;
+export interface WidgetProps {
+  channels: (ChannelData | null)[];
+  width?: number;
+  height?: number;
+  config?: object;
 }
 
-export default function BaseComponent({
-  id,
-  componentType,
-  channel,
-  title,
-  currentTime,
-  errorMessage,
-  children,
-}: BaseProps) {
-  const componentStatus = channel
-    ? getChannelStatus(channel, currentTime)
-    : 'missing-channel';
-  const heading = title ?? channel?.signal.label ?? '';
+export interface WidgetConfig {
+  id: string;
+  componentType: ComponentType;
+  channels: string[];
+  title?: string;
+  config?: object;
+  height?: number;
+  width?: number;
+}
+
+export interface WidgetRegistry {
+  renderingFunction: (props: WidgetProps) => ReactNode;
+  availableActions: Record<string, (config?: WidgetConfig) => WidgetConfig | undefined>;
+  overrideErrorMessage?: string;
+  componentType: ComponentType;
+}
+
+interface ParsedChannel{
+  channels: (ChannelData | null)[];
+  overlayMessage: String | null;
+  componentStatus: String;
+}
+
+const registeredWidgets = new Map<ComponentType, WidgetRegistry>();
+
+const componentStatusSeverityMap = {
+  'missing-channel': 6,
+  'disconnected': 5,
+  'missing': 4,
+  'invalid': 3,
+  'no-data': 2,
+  'stale': 1,
+  'active': 0
+}
+
+const componentStatusSeverity = ['active', 'stale', 'no-data', 'invalid', 'missing', 'disconnected', 'missing-channel']
+
+export function RegisterWidget(widget: WidgetRegistry) {
+  registeredWidgets.set(widget.componentType, widget);
+}
+
+export default function BaseComponent(config: WidgetConfig) {
+  const widget = registeredWidgets.get(config.componentType)
+  const errorMessage = widget?.overrideErrorMessage
+
+  const parseChannels = (): ParsedChannel => {
+    const channels = config.channels.map(id => useChannel(id))
+    const messages = channels.map((c, idx) => getOverlayMessage(c?.channel.sourceId ?? config.channels[idx], c?.status ?? 'missing-channel')).filter(c => c != null)
+    const overlayMessage = messages.length > 0 ? messages.reduce((prev, cur) => `${prev}\n${cur}`) : null;
+    const componentStatusMostSevere: number = channels.reduce<number>((prev: number, c) => Math.max(componentStatusSeverityMap[c?.status ?? 'missing-channel'], prev), 0)
+    
+    return {channels, overlayMessage, componentStatus: componentStatusSeverity[componentStatusMostSevere]};
+  }
 
   //Overlays any errors, otherwise no message is dispalyed
-  const getOverlayMessage = (): string | null => {
+  const getOverlayMessage = (channel: string, componentStatus: string): string | null => {
     switch (componentStatus) {
       case 'no-data':
-        return errorMessage ?? 'No data!';
+        return errorMessage ?? channel + ' - No data!';
       case 'missing':
-        return errorMessage ?? 'Missing data!';
+        return errorMessage ?? channel + ' - Missing data!';
       case 'invalid':
-        return errorMessage ?? 'Invalid channel data!';
+        return errorMessage ?? channel + ' - Invalid channel data!';
       case 'missing-channel':
-        return errorMessage ?? 'Channel not found!';
+        return errorMessage ?? channel + ' - Channel not found!';
       default:
         return null;
     }
   };
 
-  const overlayMessage = getOverlayMessage();
+  const {channels, overlayMessage, componentStatus} = parseChannels();
   const suffix =
     componentStatus === 'stale' || componentStatus === 'disconnected'
       ? ` (${componentStatus})`
       : '';
+  const heading = config.title ?? channels.map(c => c?.channel?.signal?.kind ?? "").join(" | ")
 
   return (
     <section
-      className={`widget widget--${componentType} widget--${componentStatus}`}
-      data-widget-id={id}
+      className={`widget widget--${config.componentType} widget--${componentStatus}`}
+      data-widget-id={config.id}
       aria-label={heading}
     >
       <h3>{heading + suffix}</h3>
@@ -100,7 +132,7 @@ export default function BaseComponent({
           aria-hidden={overlayMessage !== null}
           inert={overlayMessage !== null}
         >
-          {children}
+          {widget?.renderingFunction({channels, width: config.width, height: config.height, config: config.config})}
         </div>
         {overlayMessage !== null && (
           <p className="widget__overlay" role="alert">
