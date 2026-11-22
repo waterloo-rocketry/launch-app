@@ -1,6 +1,7 @@
 import type { ComponentType as ReactComponentType } from 'react';
 import '../styles/baseComponent.css';
-import { useChannel, type ChannelData } from '../data/telemetry-context';
+import type { ChannelData } from '../data/telemetry-context';
+import { useWidgetDataHandler } from '../data/WidgetDataHandler';
 import ProgressBar from './ProgressBar';
 
 /**
@@ -10,7 +11,7 @@ import ProgressBar from './ProgressBar';
  * a status presentation, and a registered visualization for its type.
  *
  * Dashboard responsible for layout only; it creates BaseComponent and
- * BaseComponent is responsible for reading channels and rendering widgets.
+ * BaseComponent renders widgets using channel data from WidgetDataHandler.
  *
  * Props:
  *  - id            Unique, stable identifier for this widget instance.
@@ -129,36 +130,6 @@ interface WidgetRegistry {
   overrideErrorMessage?: string;
 }
 
-/** Internal object used for parsing */
-interface ParsedChannel {
-  overlayMessage: string | null;
-  componentStatus: string;
-}
-
-/**
- * The styling of component status is based on the severity of the error
- * All status except for "active" are shown but the styling follows the most severe one.
- * */
-const componentStatusSeverityMap = {
-  'missing-channel': 6,
-  disconnected: 5,
-  missing: 4,
-  invalid: 3,
-  'no-data': 2,
-  stale: 1,
-  active: 0,
-};
-
-const componentStatusSeverity = [
-  'active',
-  'stale',
-  'no-data',
-  'invalid',
-  'missing',
-  'disconnected',
-  'missing-channel',
-];
-
 /**
  * Register all widgets
  */
@@ -172,69 +143,13 @@ const registeredWidgets: Record<ComponentType, WidgetRegistry | undefined> = {
 export default function BaseComponent(config: WidgetConfig) {
   const widget = registeredWidgets[config.componentType];
   const Widget = widget?.renderingFunction;
-  const errorMessage = widget?.overrideErrorMessage;
-  const channels = useChannel(config.channels);
-
-  const parseChannels = (): ParsedChannel => {
-    const messages = channels
-      .map((c, idx) =>
-        getOverlayMessage(
-          c?.channel.signal.label ?? config.channels[idx],
-          c?.status ?? 'missing-channel',
-        ),
-      )
-      .filter((c) => c != null);
-    const overlayMessage =
-      messages.length > 0
-        ? messages.reduce((prev, cur) => `${prev}\n${cur}`)
-        : null;
-    const componentStatusMostSevere: number = channels.reduce<number>(
-      (prev: number, c) =>
-        Math.max(
-          componentStatusSeverityMap[c?.status ?? 'missing-channel'],
-          prev,
-        ),
-      0,
-    );
-
-    return {
-      overlayMessage,
-      componentStatus: componentStatusSeverity[componentStatusMostSevere],
-    };
-  };
-
-  // Overlays any errors, otherwise no message is dispalyed
-  const getOverlayMessage = (
-    channel: string,
-    componentStatus: string,
-  ): string | null => {
-    switch (componentStatus) {
-      case 'no-data':
-        return errorMessage ?? channel + ' - No data!';
-      case 'missing':
-        return errorMessage ?? channel + ' - Missing data!';
-      case 'invalid':
-        return errorMessage ?? channel + ' - Invalid channel data!';
-      case 'missing-channel':
-        return errorMessage ?? channel + ' - Channel not found!';
-      default:
-        return null;
-    }
-  };
-
-  /**
-   * The suffix only shows the most severe status
-   */
-  const { overlayMessage, componentStatus } = parseChannels();
+  const { channels, channelLabels, overlayMessage, componentStatus } =
+    useWidgetDataHandler(config.channels, widget?.overrideErrorMessage);
   const suffix =
     componentStatus === 'stale' || componentStatus === 'disconnected'
       ? ` (${componentStatus})`
       : '';
-  const heading =
-    config.title ??
-    channels
-      .map((c, idx) => c?.channel.signal.label ?? config.channels[idx])
-      .join(' | ');
+  const heading = config.title ?? channelLabels.join(' | ');
 
   return (
     <section
