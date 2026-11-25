@@ -52,6 +52,13 @@ export default function App() {
               updateConfig={() => {}}
               setOverlay={() => {}}
             />
+            <BaseComponent
+              id={'pressure-numeric'}
+              componentType="numeric"
+              channels={['test.temperature']}
+              updateConfig={() => {}}
+              setOverlay={() => {}}
+            />
           </TelemetryProvider>
         )}
 

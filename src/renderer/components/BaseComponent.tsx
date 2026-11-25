@@ -4,6 +4,7 @@ import type { ChannelData } from '../data/telemetry-context';
 import { useWidgetDataHandler } from '../data/WidgetDataHandler';
 import ProgressBar from './ProgressBar';
 import { Gauge } from './Gauge';
+import NumericWidget from './NumericWidget';
 
 /**
  * BaseComponent
@@ -161,7 +162,7 @@ interface WidgetRegistry {
 const registeredWidgets: Record<ComponentType, WidgetRegistry | undefined> = {
   'progress-bar': { renderingFunction: ProgressBar, availableActions: {} },
   gauge: { renderingFunction: Gauge, availableActions: {} },
-  numeric: undefined,
+  numeric: { renderingFunction: NumericWidget, availableActions: {} },
   plot: undefined,
   undefined: undefined
 };

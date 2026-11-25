@@ -4,11 +4,18 @@ import NumericWidget from './NumericWidget';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import { TelemetryProvider } from '../data/TelemetryProvider';
 import { TestEventSource } from '../test/event-source';
+import BaseComponent from './BaseComponent';
 
 function setup(signalId = 'test.pressure') {
   render(
     <TelemetryProvider url="/test-api/events">
-      <NumericWidget id={signalId} />
+      <BaseComponent
+        id={signalId}
+        componentType={'numeric'}
+        channels={[signalId]}
+        updateConfig={() => {}}
+        setOverlay={() => {}}
+      />
     </TelemetryProvider>,
   );
   return TestEventSource.instances[0];
