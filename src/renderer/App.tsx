@@ -26,6 +26,7 @@ export default function App() {
               channels={['test.pressure']}
               config={{ min: 0, max: 100 }}
               updateConfig={() => {}}
+              setOverlay={() => {}}
             />
             <BaseComponent
               id={'pressure2'}
@@ -33,6 +34,7 @@ export default function App() {
               channels={['test.pressure']}
               config={{ min: 30, max: 45 }}
               updateConfig={() => {}}
+              setOverlay={() => {}}
             />
             <BaseComponent
               id={'temperature1'}
@@ -40,6 +42,7 @@ export default function App() {
               channels={['test.temperature']}
               config={{ min: 0, max: 40 }}
               updateConfig={() => {}}
+              setOverlay={() => {}}
             />
           </TelemetryProvider>
         )}

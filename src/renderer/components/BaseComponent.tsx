@@ -25,6 +25,10 @@ import ProgressBar from './ProgressBar';
  *  - height        The widget height, passed from dashboard. Nullable
  *  - width         The widget width, passed from dashboard. Nullable
  *
+ * Additional properties:
+ * - updateConfig   For the widget to update it's individual config
+ * - setOverlay     For the widget to display a settings pannel to update config
+ *
  * Each status is also a class on the wrapper (`widget--active`, `widget--stale`,
  * etc.) for styling. The wrapper fills its parent, and `.widget__body` takes the
  * remaining space, so size a widget by sizing its parent. Update styling for new
@@ -36,6 +40,8 @@ import ProgressBar from './ProgressBar';
  *      componentType='progress-bar'
  *      channels={['test.pressure']}
  *      config={{min: 0, max: 100}}
+ *      updateConfig={update_function_from_dashboard}
+ *      setOverlay={some_function_from_dashboard}
  *  />
  */
 
@@ -104,6 +110,13 @@ export interface WidgetConfig {
    * assume width and height are readonly.
    */
   updateConfig: (config: WidgetConfig) => void;
+  /**
+   * Widgets need a uniformed way to display their settings pannel, and hence we have
+   * an interface for that.
+   *
+   * Set to null to close the overlay
+   */
+  setOverlay: (overlay?: ReactComponentType) => void;
 }
 
 /**
@@ -118,13 +131,19 @@ interface WidgetRegistry {
   renderingFunction: ReactComponentType<WidgetProps>;
   /**
    * The available actions (configs) the widget can perform.
-   * When the user chose an action, the corresponding function is called, and
-   * the widget is then responsible for updating the config. If the widget returns null
-   * then the config is unchanged.
+   * When the user chose an action, the corresponding function is called.
+   *
+   * A function to update the config is also supplied.
+   *
+   * There is also an additional function to set an overlay to display the widget's settings screen.
    */
   availableActions: Record<
     string,
-    (config?: WidgetConfig) => WidgetConfig | undefined
+    (
+      config: WidgetConfig,
+      updateConfig: (config: WidgetConfig) => void,
+      setOverlay: (overlay?: ReactComponentType) => void,
+    ) => void
   >;
   /** The widget can chose an override message when chanenl errors */
   overrideErrorMessage?: string;

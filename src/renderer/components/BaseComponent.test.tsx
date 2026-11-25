@@ -12,6 +12,7 @@ import {
 
 const NOW = getMockFixture().timestampMs;
 const updateConfig = vi.fn();
+const setOverlay = vi.fn();
 
 function telemetry(scenarios: MockScenario[] = [], nowMs = NOW): Telemetry {
   let state = createTelemetryState(MOCK_SIGNALS);
@@ -26,6 +27,7 @@ function renderBase(value: Telemetry, props: Partial<WidgetConfig> = {}) {
     componentType: 'progress-bar',
     channels: ['test.pressure'],
     updateConfig,
+    setOverlay,
     ...props,
   };
   return render(
@@ -64,6 +66,7 @@ describe('BaseComponent', () => {
       channels: ['test.pressure'],
       title: 'Pressure',
       updateConfig,
+      setOverlay,
     };
     const { rerender } = render(
       <TelemetryContext.Provider value={telemetry(['nominal'])}>
