@@ -48,7 +48,12 @@ export default function App() {
               id={'pressure-gauge'}
               componentType="gauge"
               channels={['test.pressure']}
-              config={{min: 40, max: 45, major_interval: 6, minor_interval: 3}}
+              config={{
+                min: 40,
+                max: 45,
+                major_interval: 6,
+                minor_interval: 3,
+              }}
               updateConfig={() => {}}
               setOverlay={() => {}}
             />

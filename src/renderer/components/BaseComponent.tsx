@@ -55,7 +55,8 @@ import NumericWidget from './NumericWidget';
  *
  * New types shall be added when a new widget is created
  */
-export type ComponentType = 'numeric' | 'plot' | 'gauge' | 'progress-bar' | 'undefined';
+export type ComponentType =
+  'numeric' | 'plot' | 'gauge' | 'progress-bar' | 'undefined';
 
 /**
  * The properties that will be passed to the rendering function.
@@ -164,19 +165,28 @@ const registeredWidgets: Record<ComponentType, WidgetRegistry | undefined> = {
   gauge: { renderingFunction: Gauge, availableActions: {} },
   numeric: { renderingFunction: NumericWidget, availableActions: {} },
   plot: undefined,
-  undefined: undefined
+  undefined: undefined,
 };
 
 export default function BaseComponent(config: WidgetConfig) {
   const widget = registeredWidgets[config.componentType];
   const Widget = widget?.renderingFunction;
-  const { channels, channelLabels, overlayMessage, componentStatus } = config.overrideChannels ? {
-    channels: config.overrideChannels,
-    channelLabels: config.overrideChannels.map(c => c?.channel.signal.label ?? "unknown channel"),
-    overlayMessage: "",
-    componentStatus: "active"
-  } :
-    useWidgetDataHandler(config.channels, widget?.overrideErrorMessage);
+  const dataRead = useWidgetDataHandler(
+    config.channels,
+    widget?.overrideErrorMessage,
+  );
+  const { channels, channelLabels, overlayMessage, componentStatus } =
+    config.overrideChannels
+      ? {
+          channels: config.overrideChannels,
+          channelLabels: config.overrideChannels.map(
+            (c) => c?.channel.signal.label ?? 'unknown channel',
+          ),
+          overlayMessage: '',
+          componentStatus: 'active',
+        }
+      : dataRead;
+
   const suffix =
     componentStatus === 'stale' || componentStatus === 'disconnected'
       ? ` (${componentStatus})`

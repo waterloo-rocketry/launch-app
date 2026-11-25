@@ -7,15 +7,15 @@ function formatNumber(value: unknown): string | null {
 }
 
 /** Shows the latest numeric value of one channel inside the shared container. */
-export default function NumericWidget({channels}: WidgetProps) {
+export default function NumericWidget({ channels }: WidgetProps) {
   const channelRead = channels[0];
 
   if (!channelRead) {
-    return <p>Unknown Channel</p>
+    return <p>Unknown Channel</p>;
   }
 
-  const channel = channelRead.channel
-  const latest = channelRead.latest
+  const channel = channelRead.channel;
+  const latest = channelRead.latest;
   const text = latest ? formatNumber(latest.value) : null;
   const unit = channel?.signal.unit;
 
@@ -28,7 +28,5 @@ export default function NumericWidget({channels}: WidgetProps) {
     content = unit ? `${text} ${unit}` : text;
   }
 
-  return (
-    <p data-testid="numeric-value">{content}</p>
-  );
+  return <p data-testid="numeric-value">{content}</p>;
 }

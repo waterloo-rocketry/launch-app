@@ -1,6 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import NumericWidget from './NumericWidget';
 import { getMockFixture, MOCK_SIGNALS } from '../data/mock/fixtures';
 import { TelemetryProvider } from '../data/TelemetryProvider';
 import { TestEventSource } from '../test/event-source';

@@ -44,16 +44,13 @@ function armLocationFromPolarCoords(degrees: number, radius: number) {
   };
 }
 
-export function Gauge({
-  channels,
-  config,
-}: WidgetProps) {
+export function Gauge({ channels, config }: WidgetProps) {
   if (channels.length != 1) {
     return (
       <div>
         <span>Incorrect Number of Channels!</span>
       </div>
-    )
+    );
   }
 
   const channel = channels[0];
@@ -62,18 +59,21 @@ export function Gauge({
       <div>
         <span>Unknown Channel</span>
       </div>
-    )
+    );
   }
 
-  const { unit, kind } = channel.channel.signal
-  const status = channel.status
-  const latest = channel.latest
+  const { unit, kind } = channel.channel.signal;
+  const status = channel.status;
+  const latest = channel.latest;
 
-  if (!(config as GaugeProps)) config = {min: 0, max: 100, major_intervals: 5, minor_intervals: 2}
+  if (!(config as GaugeProps))
+    config = { min: 0, max: 100, major_intervals: 5, minor_intervals: 2 };
 
-  let { min, max, major_intervals, minor_intervals } = config as GaugeProps
-  if (!major_intervals) major_intervals = 5
-  if (!minor_intervals) minor_intervals = 2
+  let { major_intervals, minor_intervals } = config as GaugeProps;
+  const { min, max } = config as GaugeProps;
+
+  if (!major_intervals) major_intervals = 5;
+  if (!minor_intervals) minor_intervals = 2;
 
   // Rejects non numeric channels
   if (kind != 'number') {
