@@ -153,18 +153,18 @@ describe('BaseComponent', () => {
 
   it('renders a fallback for an unregistered widget type', () => {
     const { container } = renderBase(telemetry(['nominal']), {
-      componentType: 'gauge',
+      componentType: 'undefined',
     });
     expect(screen.getByText('No Content')).toBeInTheDocument();
     expect(container.querySelector('section')).toHaveClass(
-      'widget--gauge',
+      'widget--undefined',
       'widget--active',
     );
   });
 
   it('treats an empty channel list as an active, uncovered widget', () => {
     const { container } = renderBase(telemetry(), {
-      componentType: 'gauge',
+      componentType: 'undefined',
       channels: [],
       title: 'Static information',
     });

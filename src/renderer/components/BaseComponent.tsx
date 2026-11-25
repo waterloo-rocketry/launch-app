@@ -3,6 +3,7 @@ import '../styles/baseComponent.css';
 import type { ChannelData } from '../data/telemetry-context';
 import { useWidgetDataHandler } from '../data/WidgetDataHandler';
 import ProgressBar from './ProgressBar';
+import { Gauge } from './Gauge';
 
 /**
  * BaseComponent
@@ -53,7 +54,7 @@ import ProgressBar from './ProgressBar';
  *
  * New types shall be added when a new widget is created
  */
-export type ComponentType = 'numeric' | 'plot' | 'gauge' | 'progress-bar';
+export type ComponentType = 'numeric' | 'plot' | 'gauge' | 'progress-bar' | 'undefined';
 
 /**
  * The properties that will be passed to the rendering function.
@@ -96,6 +97,11 @@ export interface WidgetConfig {
   componentType: ComponentType;
   /** Channel IDs to read. Empty for widgets that do not depend on telemetry. */
   channels: string[];
+  /**
+   * For testing only. During testing the test harness may choose to override the channels
+   * Providing a value will bypass the reading from telemetry provider
+   */
+  overrideChannels?: (ChannelData | null)[];
   /** The title of the widget. Defaults to the channels the widget is subscribed to */
   title?: string;
   /** The config passed to the widget during rendering */
@@ -154,15 +160,21 @@ interface WidgetRegistry {
  */
 const registeredWidgets: Record<ComponentType, WidgetRegistry | undefined> = {
   'progress-bar': { renderingFunction: ProgressBar, availableActions: {} },
-  gauge: undefined,
+  gauge: { renderingFunction: Gauge, availableActions: {} },
   numeric: undefined,
   plot: undefined,
+  undefined: undefined
 };
 
 export default function BaseComponent(config: WidgetConfig) {
   const widget = registeredWidgets[config.componentType];
   const Widget = widget?.renderingFunction;
-  const { channels, channelLabels, overlayMessage, componentStatus } =
+  const { channels, channelLabels, overlayMessage, componentStatus } = config.overrideChannels ? {
+    channels: config.overrideChannels,
+    channelLabels: config.overrideChannels.map(c => c?.channel.signal.label ?? "unknown channel"),
+    overlayMessage: "",
+    componentStatus: "active"
+  } :
     useWidgetDataHandler(config.channels, widget?.overrideErrorMessage);
   const suffix =
     componentStatus === 'stale' || componentStatus === 'disconnected'
