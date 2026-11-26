@@ -3,11 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardGrid } from './DashboardGrid';
 import { createTelemetryState } from '../data/channel-store';
 import { MOCK_SIGNALS } from '../data/mock/fixtures';
+import { TelemetryContext } from '../data/telemetry-context';
+import type { Telemetry } from '../data/useTelemetry';
 import type { dashboardLayout } from '../Layout';
 
-const telemetryState = createTelemetryState(MOCK_SIGNALS);
+const telemetry: Telemetry = {
+  stream: 'connected',
+  state: createTelemetryState(MOCK_SIGNALS),
+  nowMs: 0,
+};
 
-/** 4×4 grid: a progress bar at the top-left, a channel list at column 2. */
+/** 4×4 grid: a progress bar at the top-left, another at column 2. */
 const LAYOUT: dashboardLayout = {
   version: 1,
   numberOfCols: 4,
@@ -32,7 +38,12 @@ const LAYOUT: dashboardLayout = {
       y: 0,
       w: 1,
       h: 1,
-      widgetConfig: { kind: 'channel-list', problemOnly: false },
+      widgetConfig: {
+        kind: 'progress-bar',
+        signalId: 'test.temperature',
+        min: -20,
+        max: 20,
+      },
     },
   ],
 };
@@ -42,12 +53,9 @@ function renderGrid(
   onLayoutChange?: (layout: dashboardLayout) => void,
 ) {
   render(
-    <DashboardGrid
-      layout={layout}
-      telemetryState={telemetryState}
-      nowMs={0}
-      onLayoutChange={onLayoutChange}
-    />,
+    <TelemetryContext.Provider value={telemetry}>
+      <DashboardGrid layout={layout} onLayoutChange={onLayoutChange} />
+    </TelemetryContext.Provider>,
   );
 }
 
@@ -105,7 +113,7 @@ describe('DashboardGrid', () => {
         },
       ],
     });
-    expect(screen.getByText('Channel not found')).toBeInTheDocument();
+    expect(screen.getByText('nope - Channel not found!')).toBeInTheDocument();
   });
 
   it('shows a preview while dragging and applies it on release', () => {
@@ -162,7 +170,7 @@ describe('DashboardGrid', () => {
 
   it('stops at a neighbouring widget instead of overlapping it', () => {
     renderGrid();
-    // Four columns wide would cover the channel list at column 3.
+    // Four columns wide would cover the other widget at column 3.
     dragTo(handle('xy'), 300, 0);
     expect(preview()).toHaveStyle({ gridColumn: '1 / span 2' });
     // The widget's own edge also stops there: 2 columns × 100px.
@@ -178,11 +186,9 @@ describe('DashboardGrid', () => {
 
   it('starts over when given a different layout, but not the same one again', () => {
     const grid = (layout: dashboardLayout) => (
-      <DashboardGrid
-        layout={layout}
-        telemetryState={telemetryState}
-        nowMs={0}
-      />
+      <TelemetryContext.Provider value={telemetry}>
+        <DashboardGrid layout={layout} />
+      </TelemetryContext.Provider>
     );
     const { rerender } = render(grid(LAYOUT));
     dragTo(handle('xy'), 100, 0);
@@ -300,7 +306,7 @@ describe('DashboardGrid', () => {
 
     it('pushes a widget in the way to the right and shows where it goes', () => {
       renderGrid();
-      moveTo('bar', 200, 0); // onto the channel list at column 3
+      moveTo('bar', 200, 0); // onto the other widget at column 3
       expect(screen.getByTestId('push-preview-list')).toHaveStyle({
         gridColumn: '4 / span 1',
       });

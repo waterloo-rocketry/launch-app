@@ -4,9 +4,12 @@ Create a list to save them so they can be saved/exported
 */
 
 // when there is more widget they should be added into widgetconfig type
-export type widgetConfig =
-  | { kind: 'progress-bar'; signalId: string; min: number; max: number }
-  | { kind: 'channel-list'; problemOnly: boolean; hidden?: string[] };
+export type widgetConfig = {
+  kind: 'progress-bar';
+  signalId: string;
+  min: number;
+  max: number;
+};
 
 export interface gridItem {
   id: string;
@@ -40,28 +43,6 @@ export const DEFAULT_LAYOUT: dashboardLayout = {
         signalId: 'test.temperature',
         min: -20,
         max: 20,
-      },
-    },
-    {
-      id: 'all-channel-list',
-      x: 20,
-      y: 8,
-      w: 8,
-      h: 10,
-      widgetConfig: {
-        kind: 'channel-list',
-        problemOnly: false,
-      },
-    },
-    {
-      id: 'all-channel-list-2',
-      x: 30,
-      y: 8,
-      w: 10,
-      h: 10,
-      widgetConfig: {
-        kind: 'channel-list',
-        problemOnly: false,
       },
     },
   ],

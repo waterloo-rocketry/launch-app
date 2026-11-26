@@ -8,14 +8,10 @@ import {
   type gridItem,
   type widgetConfig,
 } from '../Layout';
-import { ProgressBar } from './ProgressBar';
-import { FilteredChannelList } from './FilteredChannelList';
-import type { TelemetryState } from '../data/channel-store';
+import BaseComponent from './BaseComponent';
 
 interface dashboardGridProps {
   layout: dashboardLayout;
-  telemetryState: TelemetryState;
-  nowMs: number;
   /** Called with the new layout when the user finishes moving or resizing. */
   onLayoutChange?: (layout: dashboardLayout) => void;
 }
@@ -73,28 +69,23 @@ type Drag = ResizeDrag | MoveDrag;
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
-function renderWidget(
-  config: widgetConfig,
-  telemetryState: TelemetryState,
-  nowMs: number,
-) {
+/**
+ * Draws one widget. Widgets read their data from the surrounding
+ * TelemetryProvider, so the grid only decides where they go.
+ */
+function renderWidget(id: string, config: widgetConfig) {
   switch (config.kind) {
-    case 'channel-list': {
-      return (
-        <FilteredChannelList
-          channels={Object.values(telemetryState.channels)}
-          nowMs={nowMs}
-          problemsOnly={config.problemOnly}
-          hidden={config.hidden}
-        />
-      );
-    }
     case 'progress-bar': {
       const { signalId, min, max } = config;
-      const channel = telemetryState.channels[signalId];
-      if (!channel) return <p>Channel not found</p>;
       return (
-        <ProgressBar channel={channel} min={min} max={max} nowMs={nowMs} />
+        <BaseComponent
+          id={id}
+          componentType="progress-bar"
+          channels={[signalId]}
+          config={{ min, max }}
+          updateConfig={() => {}}
+          setOverlay={() => {}}
+        />
       );
     }
   }
@@ -118,8 +109,6 @@ function onScrollbar(event: PointerEvent<HTMLElement>) {
 
 export function DashboardGrid({
   layout: initialLayout,
-  telemetryState,
-  nowMs,
   onLayoutChange,
 }: dashboardGridProps) {
   const [layout, setLayout] = useState(initialLayout);
@@ -368,7 +357,7 @@ export function DashboardGrid({
           onPointerCancel={() => setDrag(null)}
         >
           <div className="dashboard-cell__content">
-            {renderWidget(item.widgetConfig, telemetryState, nowMs)}
+            {renderWidget(item.id, item.widgetConfig)}
           </div>
           {HANDLES.map(({ axis, label }) => (
             <div

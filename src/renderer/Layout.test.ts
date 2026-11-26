@@ -9,6 +9,14 @@ import {
   type dashboardLayout,
 } from './Layout';
 
+/** Any widget will do: these tests are about positions, not content. */
+const WIDGET = {
+  kind: 'progress-bar' as const,
+  signalId: 'test.pressure',
+  min: 0,
+  max: 100,
+};
+
 const area = (x: number, y: number, w: number, h: number) => ({ x, y, w, h });
 
 /** 4×4 grid: a 1×1 widget at the top-left and a 1×1 widget at (2, 0). */
@@ -21,12 +29,12 @@ function makeLayout(): dashboardLayout {
       {
         id: 'a',
         ...area(0, 0, 1, 1),
-        widgetConfig: { kind: 'channel-list', problemOnly: false },
+        widgetConfig: WIDGET,
       },
       {
         id: 'b',
         ...area(2, 0, 1, 1),
-        widgetConfig: { kind: 'channel-list', problemOnly: false },
+        widgetConfig: WIDGET,
       },
     ],
   };
@@ -142,7 +150,7 @@ describe('moveItem', () => {
       items: cells.map(([id, x, y]) => ({
         id,
         ...area(x, y, 1, 1),
-        widgetConfig: { kind: 'channel-list' as const, problemOnly: false },
+        widgetConfig: WIDGET,
       })),
     };
   }

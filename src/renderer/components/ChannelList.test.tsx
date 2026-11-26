@@ -9,23 +9,15 @@ import type { dashboardLayout } from '../Layout';
 import { TestEventSource } from '../test/event-source';
 
 /**
- * One channel-list widget, so these tests don't depend on DEFAULT_LAYOUT
- * (demo data that changes). Defined once: the grid resets on a new object.
+ * An empty grid, so these tests don't depend on DEFAULT_LAYOUT (demo data
+ * that changes). The channel list sits beside the grid, not in it.
+ * Defined once: the grid resets on a new object.
  */
 const MONITOR_LAYOUT: dashboardLayout = {
   version: 1,
   numberOfCols: 1,
   numberOfRows: 1,
-  items: [
-    {
-      id: 'channels',
-      x: 0,
-      y: 0,
-      w: 1,
-      h: 1,
-      widgetConfig: { kind: 'channel-list', problemOnly: false },
-    },
-  ],
+  items: [],
 };
 
 function renderList(frame?: DataFrame, nowMs = getMockFixture().timestampMs) {
